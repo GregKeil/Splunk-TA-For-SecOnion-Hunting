@@ -1,0 +1,75 @@
+<form version="1.1" theme="dark">
+  <label>Zeek SIP (V2.0)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Total SIP Logs (Excluding Known Scanners)</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>SIP Requests</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.uri, SIP.user_agent, SIP.seq, SIP.id_orig_h,  SIP.id_resp_h, SIP.request_from
+| rename SIP.uri AS uri, SIP.user_agent AS user_agent, SIP.seq AS seq, SIP.id_orig_h AS id.orig_h,  SIP.id_resp_h AS id.resp_h, SIP.request_from AS request_from
+
+| where !like (seq, "63104 OPTIONS") AND !like (seq, "-")
+
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "uri"="No Instances Found"]
+| rename uri AS URI, user_agent AS "User Agent", seq AS "Request Type", id.orig_h AS Source, id.resp_h AS Destination, request_from AS "Destination Info"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>SIP Responses</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.status_code, SIP.status_msg, SIP.warning, SIP.id_orig_h, SIP.id_resp_h, SIP.response_from
+| rename SIP.status_code AS status_code, SIP.status_msg AS status_msg, SIP.warning AS warning, SIP.id_orig_h AS id.orig_h,  SIP.id_resp_h AS id.resp_h, SIP.response_from AS response_from
+
+| where !like (status_msg, "-")
+
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "status_code"="No Instances Found"]
+| rename status_code AS "Status Code",status_msg AS Status, warning AS Message, id.orig_h AS Source, id.resp_h AS Destination, response_from AS "Destination Info", count AS Count</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
