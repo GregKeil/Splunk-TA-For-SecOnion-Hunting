@@ -1,0 +1,221 @@
+<form version="1.1" theme="dark">
+  <label>Suricata Alert IP Lookup (V1.0.3)</label>
+  <description>V1 Additions: Initial Dashboard</description>
+  <search id="TstatsBaseSearch">
+    <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
+| rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
+| stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
+| where like (src_ip, $ip|s$) OR like (dest_ip, $ip|s$)
+    </query>
+    <earliest>$Time.earliest$</earliest>
+    <latest>$Time.latest$</latest>
+    <progress>
+      <!--Set Your Zeek Indexes -->
+      <set token="zeek">zeek*</set>
+      <set token="zeeksourcetype">zeek:*:json</set>
+      <set token="zeekconnsourcetype">zeek:conn:json</set>
+      <set token="HighToLow">| eval severity = upper(substr(severity,1,1)).lower(substr(severity,2))
+| eval sorter=severity
+| eval sorter=case(severity="High",1,severity="Medium",2,severity="Low",3)
+| sort by sorter,-count
+| fields - sorter</set>
+      <set token="Formating">| appendpipe [| stats count | where count=0 | eval severity="No Instances Found"]
+| rename severity AS Severity, count AS Count, signature AS Signature, category AS Category, src_ip AS Source, dest_ip AS Destination, src_port AS "Source Port", dest_port AS "Destination Port", proto AS Protocol, community_id AS "Community ID"</set>
+      <set token="HighPort">| eval src_port=tonumber(src_port)
+| eval dest_port=tonumber(dest_port)
+| appendpipe [where src_port &gt; 1024 | eval src_port = "High Port"]
+| appendpipe [where dest_port &gt; 1024 | eval dest_port = "High Port"]
+| mvexpand src_port
+| mvexpand dest_port
+| where (src_port &lt; tonumber(1025) OR src_port = "High Port") AND (dest_port &lt; tonumber(1025) OR dest_port = "High Port")</set>
+      <unset token="sid"></unset>
+      <unset token="cid"></unset>
+    </progress>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="Time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="ip">
+      <label>IP Lookup</label>
+      <default></default>
+      <initialValue>1.1.1.1</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Total Alerts</title>
+      <single>
+        <search base="TstatsBaseSearch">
+          <query>| stats count</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h3/>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Severity Totals</title>
+      <table>
+        <search base="TstatsBaseSearch">
+          <query>| stats count by severity
+$HighToLow$
+$Formating$</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Severity">
+          <colorPalette type="map">{"High":#D41F1F,"Medium":#D94E17,"Low":#CBA700}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#118832,#FFFFFF]</colorPalette>
+          <scale type="threshold">0</scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>Unique Signature Totals</title>
+      <table>
+        <search base="TstatsBaseSearch">
+          <query>| stats count by severity, signature
+| stats count by severity
+$HighToLow$
+$Formating$</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Severity">
+          <colorPalette type="map">{"High":#D41F1F,"Medium":#D94E17,"Low":#CBA700}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="list">[#118832,#FFFFFF]</colorPalette>
+          <scale type="threshold">0</scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h2>Unique Alert Breakdown</h2>
+        <h3>Select A Row To View The Assosiated Log</h3>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title></title>
+      <table>
+        <title>Select A SID</title>
+        <search base="TstatsBaseSearch">
+          <query>| stats count by severity, signature, category, SID
+$HighToLow$
+$Formating$</query>
+          <done>
+            <unset token="sid"></unset>
+            <unset token="cid"></unset>
+          </done>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="Severity">
+          <colorPalette type="map">{"High":#D41F1F,"Medium":#E3723A,"Low":#CBA700}</colorPalette>
+        </format>
+        <format type="color" field="count">
+          <colorPalette type="list">[#CBA700,#E3723A,#D41F1F]</colorPalette>
+          <scale type="threshold">10,100</scale>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <drilldown>
+          <set token="sid">$row.SID$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$sid$">
+    <panel>
+      <html>
+        <h2>Current SID Query: $sid$</h2>
+        <h3>Select A Row To View The Payload</h3>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$sid$">
+      <table>
+        <search base="TstatsBaseSearch">
+          <done>
+            <unset token="cid"></unset>
+          </done>
+          <query>| where like (SID, $sid|s$)
+$HighPort$
+| stats count by severity, signature, category, SID, src_ip, src_port, dest_ip, dest_port, proto, community_id
+$HighToLow$
+$Format$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="cid">$row.Community ID$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$cid$">
+    <panel>
+      <html>
+        <h2>Log Payload Breakdown</h2>
+        <h3>Select A Log To Pivot Outside The Dashboard Into Zeek</h3>
+      </html>
+    </panel>
+  </row>
+  <row depends="$cid$">
+    <panel>
+      <table>
+        <search base="TstatsBaseSearch">
+          <query>| where like (community_id, $cid|s$)
+| eval Time=_time
+| table severity, SID, src_ip, dest_ip, payload_printable, community_id, Time
+| appendpipe[| where payload_printable="" | eval payload_printable="No Payload"]
+| where !like (payload_printable, "")
+$HighToLow$
+$Formating$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Severity">
+          <colorPalette type="map">{"High":#D41F1F,"Medium":#D94E17,"Low":#CBA700}</colorPalette>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <drilldown>
+          <set token="basetime">$row.Time$</set>
+          <eval token="TimeEarliest">relative_time($basetime$, "-2d")</eval>
+          <eval token="TimeLatest">relative_time($basetime$, "+2d")</eval>
+          <link target="_blank">search?q=index%3D$zeek|s$%20sourcetype%3D$zeeksourcetype|s$%0A%5B%20search%20index%3D$zeek|s$%20sourcetype%3D$zeekconnsourcetype|s$%20AND%20community_id%3D$cid|s$%0A%7C%20table%20uid%0A%7C%20format%5D%20%0Aearliest%3D$TimeEarliest|s$%20latest%3D$TimeLatest|s$%0A%7C%20sort%20_time&amp;earliest=$TimeEarliest$&amp;latest=$TimeLatest$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>
