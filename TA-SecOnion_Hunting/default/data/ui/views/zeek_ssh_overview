@@ -1,0 +1,103 @@
+<form version="1.1" theme="dark">
+  <label>Zeek SSH (V2.0)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Total SSH Logs (Excluding Known Scanners)</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Weird SSH Clients</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.id_orig_h, SSH.id_resp_h
+| rename SSH.client AS client, SSH.id_orig_h AS id.orig_h, SSH.id_resp_h AS id.resp_h
+
+| where !like (client, "-") AND !like (client, "%SSH%")
+
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "client"="No Instances Found"]
+| rename client AS "Client", id.orig_h AS Source, id.resp_h AS Destination</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Weird SSH Ports</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.id_orig_h, SSH.id_resp_h, SSH.dest_port, SSH.server
+| rename SSH.client AS client, SSH.id_orig_h AS id.orig_h, SSH.id_resp_h AS id.resp_h, SSH.dest_port AS port, SSH.server AS server
+
+| where !like (port, "22")
+
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "client"="No Instances Found"]
+| rename id.orig_h AS Source, id.resp_h AS Destination, id.resp_p AS Port, server AS Server, client AS Client</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>CIDR16 Traffic Breakdown</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by , SSH.id_orig_h, SSH.id_resp_h
+| rename SSH.id_orig_h AS id.orig_h, SSH.id_resp_h AS id.resp_h
+
+| rex field=id.orig_h "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval orig_subnet=orig_subnet + ".0.0/16"
+| rex field=id.resp_h "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval resp_subnet=resp_subnet + ".0.0/16"
+| where !like (client, "-")
+| stats count by orig_subnet, resp_subnet
+
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "orig_subnet"="No Instances Found"]
+| rename orig_subnet AS "Source Subnet", resp_subnet AS "Destination Subnet"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
