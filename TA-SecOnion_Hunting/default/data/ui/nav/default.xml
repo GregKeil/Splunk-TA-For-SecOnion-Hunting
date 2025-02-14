@@ -1,0 +1,40 @@
+<nav search_view="search">
+	<view name="search" />
+      <collection label="Suricata">
+          <view name="suricata_alerts_overview" />
+          <view name="suricata_alert_ip_lookup" />
+       </collection>
+       <collection label="Zeek">
+			<collection label="DHCP">
+          		<view name="zeek_dhcp_overview" />
+          		<view name="zeek_dhcp_lookup" />
+    		</collection>
+			<collection label="DPD">
+          		<view name="zeek_dpd_overview" />
+    		</collection>
+			<collection label="Files">
+          		<view name="zeek_files_overview" />
+    		</collection>
+			<collection label="NTLM">
+          		<view name="zeek_ntlm_overview" />
+    		</collection>
+			<collection label="SIP">
+          		<view name="zeek_sip_overview" />
+    		</collection>
+			<collection label="SMTP">
+         		<view name="zeek_smtp_overview" />
+    		</collection>
+			<collection label="SNMP">
+          		<view name="zeek_snmp_overview" />
+    		</collection>
+			<collection label="SSH">
+          		<view name="zeek_ssh_overview" />
+    		</collection>
+       </collection>
+  <collection label="Visibility And Ingest">
+    <collection label="Ingest Monitoring">
+      <view name="zeek_ingest_monitor"/>
+    </collection>
+  </collection>
+	<view name="dashboards" />
+</nav>
