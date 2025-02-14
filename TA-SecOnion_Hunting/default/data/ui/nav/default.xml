@@ -1,8 +1,8 @@
 <nav search_view="search">
 	<view name="search" />
       <collection label="Suricata">
-          <view name="suricata_alerts_overview" />
-          <view name="suricata_alert_ip_lookup" />
+          <view name="suricata_alert_overview" />
+          <view name="suricata_ip_lookup" />
        </collection>
        <collection label="Zeek">
 			<collection label="DHCP">
