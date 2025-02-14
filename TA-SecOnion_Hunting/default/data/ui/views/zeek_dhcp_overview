@@ -1,0 +1,138 @@
+<form version="1.1" theme="dark">
+  <label>Zeek DHCP (V3.3)</label>
+  <description>V3 Additions: Dashboard Now Integrates Drilldown Functionality</description>
+  <search id="dhcp_basesearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac
+| rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
+
+```Filter Out Specific Device Types Here```
+```| where !like (orig_mac_oui, "Intel Corporate")```
+
+</query>
+    <earliest>$Time.earliest$</earliest>
+    <latest>$Time.latest$</latest>
+    <done>
+      <set token="Format">| sort -count
+| appendpipe [| stats count | where count=0 | eval "orig_mac_oui"="No Instances Found"]
+| rename orig_mac_oui AS "Device Type", count AS Count, host_name AS Hostname, mac AS MAC, client_fqdn AS FQDN, assigned_addr AS IP</set>
+      <set token="Dedup">| table orig_mac_oui, assigned_addr, mac
+| mvcombine delim="," assigned_addr
+| eval assigned_addr=mvfilter(NOT match(assigned_addr,"-"))
+| fillnull value="-" assigned_addr</set>
+      <unset token="DeviceType"></unset>
+      <unset token="mac"></unset>
+    </done>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="Time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Total DHCP Logs (Excluding Known Scanners)</title>
+        <search base="dhcp_basesearch">
+          <query>| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+    <row>
+    <panel>
+      <html>
+        <h3></h3>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Unique Device Types w/ IP Assigned</title>
+      <table>
+        <title>Select A Device Type To View Information</title>
+        <search base="dhcp_basesearch">
+          <query>$Dedup$
+| where !like (assigned_addr, "-")
+| stats count by orig_mac_oui
+
+$Format$</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="DeviceType">$row.Device Type$</set>
+          <set token="Filter">!like</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Unique Device Types w/o IP Assigned</title>
+      <table>
+        <title>Select A Device Type To View Information</title>
+        <search base="dhcp_basesearch">
+          <query>$Dedup$
+| where like (assigned_addr, "-")
+| stats count by orig_mac_oui
+
+$Format$</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="DeviceType">$row.Device Type$</set>
+          <set token="Filter">like</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$DeviceType$">
+    <panel>
+      <html>
+        <h2>Current Device Type Query: $DeviceType$</h2>
+        <h3>Select A MAC Address</h3>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$DeviceType$">
+      <table>
+        <search base="dhcp_basesearch">
+          <query>$Dedup$
+| where like (orig_mac_oui, $DeviceType|s$)
+| where $Filter$ (assigned_addr, "-")
+$Format$</query>
+          <done>
+            <unset token="mac"></unset>
+          </done>
+        </search>
+        <drilldown>
+          <set token="mac">$row.MAC$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+    <row depends="$mac$">
+    <panel>
+      <html>
+        <h2>Current MAC Address Query: $mac$</h2>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$mac$">
+      <table>
+        <search base="dhcp_basesearch">
+          <query>| where like (mac, $mac|s$)
+| table orig_mac_oui, assigned_addr, client_fqdn, host_name, mac
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
