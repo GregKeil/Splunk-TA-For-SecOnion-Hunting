@@ -1,0 +1,112 @@
+<form version="1.1" theme="dark">
+  <label>Zeek DHCP Lookup (V1.4)</label>
+  <search id="dhcp_basesearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac, _time
+| rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
+| eval Date=strftime(_time, "%Y/%m/%d")
+
+```Filter Out Specific Device Types Here```
+```| where !like (orig_mac_oui, "Intel Corporate")```
+
+</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+    <done>
+      <set token="Format">| sort -count
+| appendpipe [| stats count | where count=0 | eval "orig_mac_oui"="No Instances Found"]
+| rename orig_mac_oui AS "Device Type", count AS Count, host_name AS Hostname, mac AS MAC, client_fqdn AS FQDN, assigned_addr AS IP</set>
+      <unset token="mac"></unset>
+    </done>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="lookup">
+      <label>Hostname OR IP</label>
+      <default>DESKTOP-5GPU7RE</default>
+    </input>
+    <input type="radio" token="lookuptype">
+      <label>Lookup Type</label>
+      <choice value="host_name">Hostname</choice>
+      <choice value="assigned_addr">IP</choice>
+      <default>host_name</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+    <h2>Current Query: $lookup$</h2>
+    <h3>Select A MAC Address</h3>
+  </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search base="dhcp_basesearch">
+          <query>| where like ($lookuptype$, $lookup|s$)
+| stats count by orig_mac_oui, $lookuptype$, mac
+| where !like ($lookuptype$, "-")
+| sort -count
+$Format$</query>
+          <done>
+            <unset token="mac"></unset>
+          </done>
+        </search>
+        <option name="link.visible">false</option>
+        <drilldown>
+          <set token="mac">$row.MAC$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$mac$">
+      <html>
+    <h2>Current MAC Query: $mac$</h2>
+  </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$mac$">
+      <title>IP Changes</title>
+      <chart>
+        <search base="dhcp_basesearch">
+          <query>| where like ($lookuptype$, $lookup|s$)
+| dedup orig_mac_oui, $lookuptype$, mac, Date
+| where like (mac, $mac|s$)
+| where !like (assigned_addr, "-")
+| timechart span=1d count(mac) by assigned_addr</query>
+        </search>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="link.visible">false</option>
+      </chart>
+    </panel>
+    <panel depends="$mac$">
+      <title>Name Changes</title>
+      <chart>
+        <search base="dhcp_basesearch">
+          <query>| where like ($lookuptype$, $lookup|s$)
+| dedup orig_mac_oui, $lookuptype$, mac, Date
+| where like (mac, $mac|s$)
+| appendpipe [| where like (assigned_addr, "-") | eval assigned_addr="None"]
+| where !like (assigned_addr, "-")
+| timechart span=1d count(mac) by host_name</query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="link.visible">false</option>
+      </chart>
+    </panel>
+  </row>
+</form>
