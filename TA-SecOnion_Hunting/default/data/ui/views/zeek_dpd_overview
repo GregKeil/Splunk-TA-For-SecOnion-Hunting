@@ -1,0 +1,185 @@
+<form version="1.1" theme="dark">
+  <label>Zeek DPD (V3.2)</label>
+  <description>V3 Additions: Dashboard Now Integrates Drilldown</description>
+  <search id="dpd_basesearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DPD by DPD.analyzer, DPD.src_ip, DPD.dest_ip, DPD.dest_port, DPD.failure_reason
+| rename DPD.analyzer AS analyzer, DPD.src_ip AS src_ip, DPD.dest_ip AS dest_ip, DPD.dest_port AS dest_port, DPD.failure_reason AS failure_reason
+    </query>
+    <done>
+      <set token="HighPort">| eval dest_port=tonumber(dest_port)
+| appendpipe [where dest_port &gt; 1024 | eval dest_port = "High Port"]
+| mvexpand dest_port
+| where (dest_port &lt; tonumber(1025) OR dest_port = "High Port")</set>
+      <set token="CIDR16">| rex field=src_ip "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval orig_subnet=orig_subnet + ".0.0/16"
+| rex field=dest_ip "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval resp_subnet=resp_subnet + ".0.0/16"</set>
+      <set token="SimpleFail">| appendpipe [where like (failure_reason, "Binpac exception:%")| eval failure_reason="Binpac exception"]
+| appendpipe [where like (failure_reason, "Invalid version late in TLS connection%")| eval failure_reason="Invalid version late in TLS connection"]
+| appendpipe [where like (failure_reason, "not a http request line")| eval failure_reason="Invalid HTTP request"]
+| appendpipe [where like (failure_reason, "not a http reply line")| eval failure_reason="Invalid HTTP reply"]
+| mvexpand failure_reason
+| where !like (failure_reason, "Binpac exception:%") AND !like (failure_reason, "not a http request line") AND !like (failure_reason, "Invalid version late in TLS connection.%") AND !like (failure_reason, "not a http reply line")</set>
+      <set token="Format">| sort by -count
+| appendpipe [| stats count | where count=0 | eval "Instance"="No Instances Found" | table Instance]
+| rename analyzer AS "Detected Protocol", orig_subnet AS "Source CIDR16", resp_subnet AS "Destination CIDR16", dest_port AS "Destination Port", failure_reason AS "Failure Reason", count AS Count, dest_ip AS "Destination IP", src_ip AS "Source IP"</set>
+    </done>
+    <earliest>$Time.earliest$</earliest>
+    <latest>$Time.latest$</latest>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="Time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Total DPD Logs (Excluding Known Scanners)</title>
+        <search base="dpd_basesearch">
+          <query>| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+      <h2>Unique Protocols Detected</h2>
+      <h3>Select A Protocol</h3>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Unique Detected Protocols</title>
+        <search base="dpd_basesearch">
+          <query>| stats count by analyzer
+
+$Format$</query>
+          <done>
+            <unset token="analyzer"></unset>
+            <unset token="failreason"></unset>
+            <unset token="subnet"></unset>
+          </done>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
+        <drilldown>
+          <set token="analyzer">$row.Detected Protocol$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$analyzer$">
+    <panel>
+      <html>
+      <h2>Current Protocol Query: $analyzer$</h2>
+      <h3>Select A Fail Reason</h3>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$analyzer$">
+      <table>
+        <title>Unique Failure Reasons</title>
+        <search base="dpd_basesearch">
+          <query>| where like (analyzer, $analyzer|s$)
+            
+$SimpleFail$
+
+| stats count by analyzer, failure_reason
+
+$Format$</query>
+          <done>
+            <unset token="failreason"></unset>
+            <unset token="subnet"></unset>
+          </done>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
+        <drilldown>
+          <set token="failreason">$row.Failure Reason$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$failreason$">
+    <panel>
+      <html>
+      <h2>Current Failure Reason Query: $failreason$</h2>
+      <h3>Select A Subnet</h3>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$failreason$">
+      <table>
+        <search base="dpd_basesearch">
+          <query>| where like (analyzer, $analyzer|s$)
+            
+$HighPort$
+
+$CIDR16$
+
+$SimpleFail$
+
+| where like (failure_reason, $failreason|s$)
+
+| stats count by analyzer, orig_subnet, resp_subnet, failure_reason
+
+$Format$</query>
+          <done>
+            <unset token="subnet"></unset>
+          </done>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
+        <drilldown>
+          <set token="subnet">$click.value2$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$subnet$">
+    <panel>
+      <html>
+      <h2>Current Subnet Query: $subnet$</h2>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$subnet$">
+      <table>
+        <search base="dpd_basesearch">
+          <query>| where like (analyzer, $analyzer|s$)
+            
+$HighPort$
+
+$CIDR16$
+
+$SimpleFail$
+
+| where like (failure_reason, $failreason|s$)
+
+| where like (orig_subnet, $subnet|s$) OR like (resp_subnet, $subnet|s$)
+
+| stats count by analyzer, src_ip, dest_ip, dest_port, failure_reason
+
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
+      </table>
+    </panel>
+  </row>
+</form>
