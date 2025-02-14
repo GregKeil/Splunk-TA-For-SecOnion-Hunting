@@ -1,0 +1,69 @@
+<form version="1.1" theme="dark">
+  <label>Zeek SNMP (V2.0)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="Time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Total SNMP Logs (Excluding Known Scanners)</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Strange Public Display Strings</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP by SNMP.community, SNMP.src, SNMP.dest, SNMP.display_string
+| rename SNMP.community AS community, SNMP.src AS src, SNMP.dest AS dest, SNMP.display_string AS display_string
+
+| where like (community, "public") AND !like (display_string, "-")
+
+| appendpipe [| stats count | where count=0 | eval "community"="No Instances Found"]
+| rename community AS Community, src AS "Source IP", dest AS "Destination IP", display_string AS "Display String", count AS Count</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Strange Communities</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP by SNMP.community, SNMP.src, SNMP.dest, SNMP.display_string
+| rename SNMP.community AS community, SNMP.src AS src, SNMP.dest AS dest, SNMP.display_string AS display_string
+
+| where !like (community, "public")
+
+| appendpipe [| stats count | where count=0 | eval "community"="No Instances Found"]
+| rename community AS Community, src_ip AS "Source IP", dest_ip AS "Destination IP", display_string AS "Display String"</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
