@@ -1,0 +1,128 @@
+<form version="1.1" theme="dark">
+  <label>Zeek Files (V2.0)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="Time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="T-MD5">
+      <label>MD5 Search</label>
+      <default>2a4faa344a658f42830ecbffb14328b1</default>
+    </input>
+    <input type="text" token="T-Filename">
+      <label>File Name Search</label>
+      <default>onedrive\mcfile.ps1</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Total Zeek File Logs (Excluding Known Scanners)</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>EXE Files &amp; PS1 Scripts</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5
+| rename Files.attachment_type AS attachment_type, Files.file_name AS file_name, Files.md5 AS md5
+
+| eval file_name=lower(file_name)
+| where like (file_name, "%.ps1") OR like (file_name, "%.exe")
+
+| sort by -count
+| appendpipe [| stats count | where count=0 | eval "attachment_type"="No Instances Found"]
+| rename attachment_type AS "File Type", file_name AS Filename, md5 AS MD5, count AS Count</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+          <refresh>5m</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Strange TXT Files</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5
+| rename Files.attachment_type AS attachment_type, Files.file_name AS file_name, Files.md5 AS md5
+
+| eval file_name=lower(file_name)
+| where like (file_name, "%.txt")
+| where !like (file_name, "json.txt") AND !like (file_name, "windows\temp\fstmp\fs_smbfile_%.%.%.%-%.txt")
+
+| sort by -count
+| appendpipe [| stats count | where count=0 | eval "attachment_type"="No Instances Found"]
+| rename attachment_type AS "File Type", file_name AS Filename, md5 AS MD5, count AS Count</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>File Name Search</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5, Files.src, Files.dest, Files.dest_port
+| rename Files.attachment_type AS attachment_type, Files.file_name AS file_name, Files.md5 AS md5, Files.src AS src, Files.dest AS dest, Files.dest_port AS dest_port
+
+| eval file_name=lower(file_name)
+| where like (file_name, "$T-Filename$")
+
+| sort by -count
+| appendpipe [| stats count | where count=0 | eval "attachment_type"="No Instances Found"]
+| rename attachment_type AS "File Type", file_name AS Filename, md5 AS MD5, count AS Count, src AS "Source IP", dest AS "Destination IP", dest_port AS "Destination Port"</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>MD5 Search</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5, Files.src, Files.dest, Files.dest_port
+| rename Files.attachment_type AS attachment_type, Files.file_name AS file_name, Files.md5 AS md5, Files.src AS src, Files.dest AS dest, Files.dest_port AS dest_port
+
+| eval file_name=lower(file_name)
+| where like (md5, "$T-MD5$")
+
+| sort by -count
+| appendpipe [| stats count | where count=0 | eval "attachment_type"="No Instances Found"]
+| rename attachment_type AS "File Type", file_name AS Filename, md5 AS MD5, count AS Count, src AS "Source IP", dest AS "Destination IP", dest_port AS "Destination Port"</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
