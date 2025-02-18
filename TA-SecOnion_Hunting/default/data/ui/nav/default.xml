@@ -31,6 +31,9 @@
           		<view name="zeek_ssh_overview" />
     		</collection>
        </collection>
+  <collection label="IOC Hunting">
+	  <view name="zeek_ioc_dashboard">
+	  </collection>
   <collection label="Visibility And Ingest">
     <collection label="Ingest Monitoring">
       <view name="zeek_ingest_monitor"/>
