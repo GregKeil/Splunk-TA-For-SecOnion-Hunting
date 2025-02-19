@@ -21,7 +21,7 @@
 | eval sorter=case(severity="High",1,severity="Medium",2,severity="Low",3)
 | sort by sorter,-count
 | fields - sorter</set>
-      <set token="Formating">| appendpipe [| stats count | where count=0 | eval severity="No Instances Found"]
+      <set token="Formatting">| appendpipe [| stats count | where count=0 | eval severity="No Instances Found"]
 | rename severity AS Severity, count AS Count, signature AS Signature, category AS Category, src_ip AS Source, dest_ip AS Destination, src_port AS "Source Port", dest_port AS "Destination Port", proto AS Protocol, community_id AS "Community ID"</set>
       <set token="HighPort">| eval src_port=tonumber(src_port)
 | eval dest_port=tonumber(dest_port)
@@ -75,7 +75,7 @@
         <search base="TstatsBaseSearch">
           <query>| stats count by severity
 $HighToLow$
-$Formating$</query>
+$Formatting$</query>
         </search>
         <option name="link.visible">false</option>
         <option name="drilldown">none</option>
@@ -96,7 +96,7 @@ $Formating$</query>
           <query>| stats count by severity, signature
 | stats count by severity
 $HighToLow$
-$Formating$</query>
+$Formatting$</query>
         </search>
         <option name="link.visible">false</option>
         <option name="drilldown">none</option>
@@ -127,7 +127,7 @@ $Formating$</query>
         <search base="TstatsBaseSearch">
           <query>| stats count by severity, signature, category, SID
 $HighToLow$
-$Formating$</query>
+$Formatting$</query>
           <done>
             <unset token="sid"></unset>
             <unset token="cid"></unset>
@@ -171,7 +171,7 @@ $Formating$</query>
 $HighPort$
 | stats count by severity, signature, category, SID, src_ip, src_port, dest_ip, dest_port, proto, community_id
 $HighToLow$
-$Format$</query>
+$Formatting$</query>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
@@ -199,7 +199,7 @@ $Format$</query>
 | appendpipe[| where payload_printable="" | eval payload_printable="No Payload"]
 | where !like (payload_printable, "")
 $HighToLow$
-$Formating$</query>
+$Formatting$</query>
         </search>
         <option name="drilldown">cell</option>
         <option name="link.visible">0</option>
