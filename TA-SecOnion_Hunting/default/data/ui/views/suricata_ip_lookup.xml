@@ -5,7 +5,9 @@
     <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
 | rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
 | stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
-| where like (src_ip, $ip|s$) OR like (dest_ip, $ip|s$)
+| eval inputIP=$ip|s$
+| rex mode=sed field=inputIP "s/ //g"
+| where src_ip = inputIP OR dest_ip = inputIP
     </query>
     <earliest>$Time.earliest$</earliest>
     <latest>$Time.latest$</latest>
