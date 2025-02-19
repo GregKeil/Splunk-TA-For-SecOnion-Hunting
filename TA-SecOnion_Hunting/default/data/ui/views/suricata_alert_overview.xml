@@ -7,7 +7,8 @@
 | stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
 
 ```Filter Out Specific Alerts Here```
-```| where !like (signature, "ET DNS Query for .cc TLD") AND !like (dest_ip,"1.1.1.1")```
+```| where !like (src_ip, "1.1.1.1") AND !like (payload_printable, "NMAP")```
+
 </query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
@@ -45,7 +46,8 @@ match(src_ip,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
 | mvexpand dest_port
 | where (src_port &lt; tonumber(1025) OR src_port = "High Port") AND (dest_port &lt; tonumber(1025) OR dest_port = "High Port")</set>
       <set token="ScannerQuery">| stats count by src_ip, scannertype
-| where count&gt;15
+```Filter By Amounts Here```
+```| where count > 5```
 | fields - count
 | mvcombine src_ip
 | rename src_ip AS "Scanner IP", scannertype AS "Scanner Type"</set>
@@ -139,19 +141,19 @@ $Formating$</query>
       <title>Scanners Currently Not Be Filtered In Known_Scanners.csv (Pre-Datamodel Ingest)</title>
       <table>
         <search base="TstatsBaseSearch">
-          <query>```Add Scanner Flags And Types Here:```
-| appendpipe [| where like (payload_printable, "%nessus%") | eval scannertype="Nessus"]
-| appendpipe [| eval Length=len(payload_printable)| where like (payload_printable, "CCC%CCC") AND like (Length, "300") | eval scannertype="Nmap"]
-
-$ScannerQuery$</query>
           <done>
             <condition match="$job.resultCount$ == 0">
               <unset token="showscanner"></unset>
             </condition>
           </done>
+          <query>```Add Scanner Flags And Types Here:```
+| appendpipe [| where like (payload_printable, "%nessus%") | eval scannertype="Nessus"]
+| appendpipe [| where like (payload_printable, "%Nmap Scripting Engine%") OR like (signature, "ET SCAN NMAP OS Detection Probe") | eval scannertype="Nmap"]
+
+$ScannerQuery$</query>
         </search>
         <option name="drilldown">none</option>
-        <option name="link.visible">false</option>
+        <option name="link.visible">0</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="Scanner Type">
           <colorPalette type="sharedList"></colorPalette>
@@ -291,7 +293,7 @@ $Formating$</query>
 | eval Time=_time
 | appendpipe[| where payload_printable="" | eval payload_printable="No Payload"]
 | where !like (payload_printable, "")
-| table severity, SID, src_ip, dest_ip, payload_printable, community_id, Time
+| table severity, SID, src_ip, dest_ip, payload_printable, community_id, _time, Time
 $HighToLow$
 $Formating$</query>
         </search>
