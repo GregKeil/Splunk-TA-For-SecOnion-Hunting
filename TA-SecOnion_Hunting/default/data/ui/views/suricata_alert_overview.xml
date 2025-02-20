@@ -52,7 +52,6 @@ match(src_ip,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
       <unset token="sid"></unset>
       <unset token="ip"></unset>
       <unset token="cid"></unset>
-      <set token="showscanner">ShowMe</set>
     </done>
   </search>
     <search id="ScannerBaseSearch">
@@ -63,6 +62,7 @@ match(src_ip,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
     <done>
+      <set token="showscanner">ShowMe</set>
       <set token="ScannerQuery">| stats count by src_ip, scannertype
 | where count&gt;15
 | fields - count
