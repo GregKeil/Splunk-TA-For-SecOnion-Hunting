@@ -1,19 +1,19 @@
 <form version="1.1" theme="dark" onunloadCancelJobs="true">
-  <label>Suricata Alert Overview (V5.9.4)</label>
+  <label>Suricata Alert Overview (V5.9.5)</label>
   <description>V5 Additions: Dashboard Now Integrates Drilldown</description>
   <search id="MainBaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
 | rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
-| stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
+| table severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
 
 ```Filter Out Specific Rules Here```
-```FILTER```
-
+| where !like(signature, "ET INFO External IP%")
+      
 </query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
     <progress>
-      <unset token="Results Loading"></unset>
+      <unset token="Loading"></unset>
       <unset token="IPEval"></unset>
       <unset token="HighToLow"></unset>
       <unset token="Formating"></unset>
@@ -244,7 +244,8 @@ $Formating$</query>
             <unset token="ip"></unset>
             <unset token="cid"></unset>
           </done>
-          <query>| where like (SID, $sid|s$)
+          <query>| stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
+| where like (SID, $sid|s$)
 $HighPort$
 | stats count by severity, signature, category, SID, src_ip, src_port, dest_ip, dest_port, proto
 $HighToLow$
@@ -281,7 +282,8 @@ $Formating$</query>
           <done>
             <unset token="cid"></unset>
           </done>
-          <query>| where like (src_ip, $ip|s$) OR like (dest_ip, $ip|s$)
+          <query>| stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
+| where like (src_ip, $ip|s$) OR like (dest_ip, $ip|s$)
 $HighPort$
 | stats count by severity, signature, category, SID, src_ip, src_port, dest_ip, dest_port, proto, community_id
 $HighToLow$
