@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek Conn Overview (V1.0.0)</label>
+  <label>Zeek Conn Overview (V1.0.1)</label>
   <search id="BaseSearch">
     <query>
       | tstats summariesonly=f count from datamodel=Zeek_Suite.Conn by Conn.src_ip, Conn.src_port, Conn.dest_ip, Conn.dest_port, Conn.conn_state, Conn.service, Conn.uid, _time
