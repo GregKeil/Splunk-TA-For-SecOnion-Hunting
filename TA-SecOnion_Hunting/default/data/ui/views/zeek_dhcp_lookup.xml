@@ -1,5 +1,6 @@
 <form version="1.1" theme="dark">
-  <label>Zeek DHCP Lookup (V1.4)</label>
+  <label>Zeek DHCP Lookup (V1.1.4)</label>
+  <description>V1 Additions: Initial Dashboard</description>
   <search id="dhcp_basesearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac, _time
 | rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
