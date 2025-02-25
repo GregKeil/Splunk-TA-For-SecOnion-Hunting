@@ -1,0 +1,131 @@
+<form version="1.1" theme="dark">
+  <label>Zeek Conn Overview</label>
+  <search id="BaseSearch">
+    <query>
+      | tstats summariesonly=f count from datamodel=Zeek_Suite.Conn by Conn.src_ip, Conn.src_port, Conn.dest_ip, Conn.dest_port, Conn.conn_state, Conn.service, Conn.uid, _time
+| rename Conn.src_ip AS src_ip, Conn.src_port AS src_port, Conn.dest_ip AS dest_ip, Conn.dest_port AS dest_port, Conn.conn_state AS conn_state, Conn.service AS service, Conn.uid AS uid
+| where !like(src_ip, "%:%")
+    </query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+    <progress>
+      <unset token="Loading"></unset>
+      <set token="CIDR16">| rex field=src_ip "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval orig_subnet=orig_subnet + ".0.0/16"
+| rex field=dest_ip "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval resp_subnet=resp_subnet + ".0.0/16"
+| where !like (client, "-")
+| stats count by orig_subnet, resp_subnet</set>
+      <set token="ConnFail">| where conn_state IN("REJ","RST")</set>
+      <set token="ConnPass">| where conn_state="SF"</set>
+      <set token="ByIP">| stats count by conn_state,src_ip, dest_ip</set>
+      <set token="ByPort">| stats count by conn_state,dest_port,service</set>
+      <set token="Format">| sort - count
+| head 20
+| rename src_ip AS "Source IP", src_port AS "Source Port", dest_ip AS "Destinaton IP", dest_port AS "Destination Port", conn_state AS "Connection State", service AS Service, uid AS UID, orig_subnet AS "Source Subnet", resp_subnet AS "Destination Subnet"</set>
+    </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+    <row rejects="$Loading$">
+    <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <title>Total Zeek Conn Logs</title>
+      <single>
+        <search base="BaseSearch">
+          <query>| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <title>Top 20 CIDR16 Subnet Communications</title>
+      <table>
+        <search base="BaseSearch">
+          <query>$CIDR16$
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <title>Top 20 Failed IP Connections</title>
+      <table>
+        <search base="BaseSearch">
+          <query>$ConnFail$
+$ByIP$
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Top 20 Successful IP Connections</title>
+      <table>
+        <search base="BaseSearch">
+          <query>$ConnPass$
+$ByIP$
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <title>Top 20 Failed Port Connections</title>
+      <table>
+        <search base="BaseSearch">
+          <query>$ConnFail$
+$ByPort$
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Top 20 Successful Port Connections</title>
+      <table>
+        <search base="BaseSearch">
+          <query>$ConnPass$
+$ByPort$
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
