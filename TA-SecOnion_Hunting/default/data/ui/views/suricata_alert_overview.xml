@@ -1,6 +1,5 @@
 <form version="1.1" theme="dark" onunloadCancelJobs="true">
-  <label>Suricata Alert Overview (V5.9.5)</label>
-  <description>V5 Additions: Dashboard Now Integrates Drilldown</description>
+  <label>Suricata Alert Overview</label>
   <search id="MainBaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
 | rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
