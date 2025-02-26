@@ -1,6 +1,6 @@
 <form version="1.1" theme="dark">
-  <label>Zeek DHCP (V2.3.1)</label>
-  <description>V2 Additions: Dashboard Now Integrates Drilldown Functionality</description>
+  <label>Zeek DHCP Overview (V2.3.1)</label>
+  <description>V3 Additions: Dashboard Now Integrates Drilldown Functionality</description>
   <search id="dhcp_basesearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac
 | rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
@@ -11,6 +11,9 @@
 </query>
     <earliest>$Time.earliest$</earliest>
     <latest>$Time.latest$</latest>
+    <progress>
+      <unset token="Loading"></unset>
+    </progress>
     <done>
       <set token="Format">| sort -count
 | appendpipe [| stats count | where count=0 | eval "orig_mac_oui"="No Instances Found"]
@@ -19,6 +22,7 @@
 | mvcombine delim="," assigned_addr
 | eval assigned_addr=mvfilter(NOT match(assigned_addr,"-"))
 | fillnull value="-" assigned_addr</set>
+      <set token="Loading">1</set>
       <unset token="DeviceType"></unset>
       <unset token="mac"></unset>
     </done>
@@ -32,6 +36,13 @@
       </default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <single>
@@ -41,13 +52,14 @@
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
       </single>
     </panel>
   </row>
-    <row>
+  <row>
     <panel>
       <html>
-        <h3></h3>
+        <h3/>
       </html>
     </panel>
   </row>
@@ -64,6 +76,7 @@
 $Format$</query>
         </search>
         <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
         <drilldown>
           <set token="DeviceType">$row.Device Type$</set>
           <set token="Filter">!like</set>
@@ -82,6 +95,7 @@ $Format$</query>
 $Format$</query>
         </search>
         <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
         <drilldown>
           <set token="DeviceType">$row.Device Type$</set>
           <set token="Filter">like</set>
@@ -109,13 +123,14 @@ $Format$</query>
             <unset token="mac"></unset>
           </done>
         </search>
+        <option name="link.visible">false</option>
         <drilldown>
           <set token="mac">$row.MAC$</set>
         </drilldown>
       </table>
     </panel>
   </row>
-    <row depends="$mac$">
+  <row depends="$mac$">
     <panel>
       <html>
         <h2>Current MAC Address Query: $mac$</h2>
@@ -132,6 +147,7 @@ $Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <option name="link.visible">false</option>
       </table>
     </panel>
   </row>
