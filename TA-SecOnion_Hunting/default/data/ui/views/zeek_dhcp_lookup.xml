@@ -12,10 +12,14 @@
 </query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
+    <progress>
+      <unset token="Loading"></unset>
+    </progress>
     <done>
       <set token="Format">| sort -count
 | appendpipe [| stats count | where count=0 | eval "orig_mac_oui"="No Instances Found"]
 | rename orig_mac_oui AS "Device Type", count AS Count, host_name AS Hostname, mac AS MAC, client_fqdn AS FQDN, assigned_addr AS IP</set>
+      <set token="Loading">1</set>
       <unset token="mac"></unset>
     </done>
   </search>
@@ -38,6 +42,13 @@
       <default>host_name</default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <html>
