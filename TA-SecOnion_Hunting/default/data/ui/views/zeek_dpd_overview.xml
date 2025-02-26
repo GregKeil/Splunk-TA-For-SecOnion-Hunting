@@ -1,10 +1,12 @@
 <form version="1.1" theme="dark">
-  <label>Zeek DPD (V3.2)</label>
-  <description>V3 Additions: Dashboard Now Integrates Drilldown</description>
+  <label>Zeek DPD Overview</label>
   <search id="dpd_basesearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DPD by DPD.analyzer, DPD.src_ip, DPD.dest_ip, DPD.dest_port, DPD.failure_reason
 | rename DPD.analyzer AS analyzer, DPD.src_ip AS src_ip, DPD.dest_ip AS dest_ip, DPD.dest_port AS dest_port, DPD.failure_reason AS failure_reason
     </query>
+    <progress>
+      <unset token="Loading"></unset>
+    </progress>
     <done>
       <set token="HighPort">| eval dest_port=tonumber(dest_port)
 | appendpipe [where dest_port &gt; 1024 | eval dest_port = "High Port"]
@@ -23,6 +25,7 @@
       <set token="Format">| sort by -count
 | appendpipe [| stats count | where count=0 | eval "Instance"="No Instances Found" | table Instance]
 | rename analyzer AS "Detected Protocol", orig_subnet AS "Source CIDR16", resp_subnet AS "Destination CIDR16", dest_port AS "Destination Port", failure_reason AS "Failure Reason", count AS Count, dest_ip AS "Destination IP", src_ip AS "Source IP"</set>
+    <set token="Loading">1</set>
     </done>
     <earliest>$Time.earliest$</earliest>
     <latest>$Time.latest$</latest>
@@ -63,7 +66,6 @@
         <title>Unique Detected Protocols</title>
         <search base="dpd_basesearch">
           <query>| stats count by analyzer
-
 $Format$</query>
           <done>
             <unset token="analyzer"></unset>
@@ -92,12 +94,9 @@ $Format$</query>
       <table>
         <title>Unique Failure Reasons</title>
         <search base="dpd_basesearch">
-          <query>| where like (analyzer, $analyzer|s$)
-            
+          <query>| where like (analyzer, $analyzer|s$)         
 $SimpleFail$
-
 | stats count by analyzer, failure_reason
-
 $Format$</query>
           <done>
             <unset token="failreason"></unset>
@@ -124,18 +123,12 @@ $Format$</query>
     <panel depends="$failreason$">
       <table>
         <search base="dpd_basesearch">
-          <query>| where like (analyzer, $analyzer|s$)
-            
+          <query>| where like (analyzer, $analyzer|s$)   
 $HighPort$
-
 $CIDR16$
-
 $SimpleFail$
-
 | where like (failure_reason, $failreason|s$)
-
 | stats count by analyzer, orig_subnet, resp_subnet, failure_reason
-
 $Format$</query>
           <done>
             <unset token="subnet"></unset>
@@ -160,20 +153,13 @@ $Format$</query>
     <panel depends="$subnet$">
       <table>
         <search base="dpd_basesearch">
-          <query>| where like (analyzer, $analyzer|s$)
-            
+          <query>| where like (analyzer, $analyzer|s$)       
 $HighPort$
-
 $CIDR16$
-
 $SimpleFail$
-
 | where like (failure_reason, $failreason|s$)
-
 | where like (orig_subnet, $subnet|s$) OR like (resp_subnet, $subnet|s$)
-
 | stats count by analyzer, src_ip, dest_ip, dest_port, failure_reason
-
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
