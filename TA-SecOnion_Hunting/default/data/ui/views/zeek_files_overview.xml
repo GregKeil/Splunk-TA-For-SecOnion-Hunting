@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek Files</label>
+  <label>Zeek Files Overview</label>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="Time">
       <label>Time Selection</label>
