@@ -1,6 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Suricata Alert IP Lookup (V1.0.3)</label>
-  <description>V1 Additions: Initial Dashboard</description>
+  <label>Suricata Alert IP Lookup</label>
   <search id="TstatsBaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
 | rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
