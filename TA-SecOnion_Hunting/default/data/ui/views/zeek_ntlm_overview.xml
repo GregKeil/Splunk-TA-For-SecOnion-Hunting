@@ -1,6 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek NTLM (V2.0)</label>
-  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <label>Zeek NTLM Overview</label>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="Time">
       <label>Time Selection</label>
