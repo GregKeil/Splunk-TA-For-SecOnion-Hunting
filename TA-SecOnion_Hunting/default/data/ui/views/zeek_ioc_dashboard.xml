@@ -1,6 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek IOC Dashboard (V2.1.1)</label>
-  <description>V2 Additions: Dashboard has been completely redesigned from the original IOC dashboard</description>
+  <label>Zeek IOC Dashboard</label>
   <search id="ZeekIP">
     <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.IP by IP.src_ip, IP.dest_ip, _time
 | rename IP.src_ip as src, IP.dest_ip AS dest
