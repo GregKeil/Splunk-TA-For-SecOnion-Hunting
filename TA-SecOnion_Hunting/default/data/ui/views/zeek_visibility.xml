@@ -1,0 +1,125 @@
+<form version="1.1" theme="dark">
+  <label>Zeek Ingest Monitor (V1.0)</label>
+  <description>V1: Dashboard created</description>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="Time">
+      <label>Time Selector</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+      <h1>Zeek Ingest Overview</h1>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Events Recieved (Time Selection)</title>
+        <search>
+          <query>| tstats count WHERE (index=zeek*)</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Events Received (Today)</title>
+        <search>
+          <query>| tstats count WHERE (index=zeek*) by  _time span=1d prestats=t 
+| timechart span=1d count by index</query>
+          <earliest>-1d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Events Received (30 Day Avg)</title>
+        <search>
+          <query>| tstats count WHERE (index=zeek*)
+| eval avg=round(count/30)
+| table avg</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Events By Hour (Time Selection)</title>
+        <search>
+          <query>| tstats count WHERE (index=zeek*) by _time span=1h prestats=t 
+| timechart span=1h count by index
+| rename NULL AS "Events"</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+      <h1>SourceType Overview</h1>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Unique SourceTypes (Time Selection)</title>
+        <search>
+          <query>index=zeek*
+| timechart span=1h dc(sourcetype) AS "Unique Sourcetypes"</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+      <h1>Indexer Overview</h1>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Zeek Indexing (Time Selection)</title>
+        <search>
+          <query>index=zeek* 
+| timechart dc(_time) by splunk_server</query>
+          <earliest>$Time.earliest$</earliest>
+          <latest>$Time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+</form>
