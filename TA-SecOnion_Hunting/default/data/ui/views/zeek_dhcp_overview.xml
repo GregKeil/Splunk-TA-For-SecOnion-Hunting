@@ -1,5 +1,6 @@
 <form version="1.1" theme="dark">
-  <label>Zeek DHCP Overview</label>
+  <label>Zeek DHCP Overview (V2.3.1)</label>
+  <description>V3 Additions: Dashboard Now Integrates Drilldown Functionality</description>
   <search id="dhcp_basesearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac
 | rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
@@ -45,13 +46,15 @@
   <row>
     <panel>
       <single>
-        <title>Total DHCP Logs (Excluding Known Scanners)</title>
+        <title>Total DHCP Logs</title>
         <search base="dhcp_basesearch">
           <query>| stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="link.visible">false</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
     </panel>
   </row>
