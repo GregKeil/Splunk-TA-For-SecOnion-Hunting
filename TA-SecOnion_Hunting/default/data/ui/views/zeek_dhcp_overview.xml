@@ -60,6 +60,19 @@
   </row>
   <row>
     <panel>
+      <chart>
+        <title>Top Unique Device Types</title>
+        <search base="dhcp_basesearch">
+          <query>| stats count by orig_mac_oui</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="link.visible">0</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <html>
         <h3/>
       </html>
