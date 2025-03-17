@@ -65,6 +65,39 @@
   </row>
   <row>
     <panel>
+      <title>Top Services</title>
+      <chart>
+        <search base="BaseSearch">
+          <query>| stats count by service
+| where service!="-"</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Source Subnets</title>
+      <chart>
+        <search base="BaseSearch">
+          <query>$CIDR16$
+| stats count by orig_subnet</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+      <h1/>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <title>Top 20 CIDR16 Subnet Communications</title>
       <table>
         <search base="BaseSearch">
