@@ -62,6 +62,7 @@ match(id.resp_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
         <search base="BaseSearch">
           <query>| stats count</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
@@ -76,6 +77,7 @@ match(id.resp_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
         <search base="BaseSearch">
           <query>| stats count by port</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -90,6 +92,7 @@ match(id.resp_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
 | where like (ExternalSouce, "True") AND !like (ExternalDest, "True")
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="count">
@@ -113,6 +116,7 @@ $Format$</query>
 | where !like (ExternalSouce, "True") AND like (ExternalDest, "True")
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="Client">
@@ -138,6 +142,7 @@ $Format$</query>
           <query>| where !like (port, "22")
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="count">
@@ -163,6 +168,7 @@ $Format$</query>
           <query>| where !like (client, "-") AND !like (client, "%SSH%")
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="count">
@@ -180,6 +186,7 @@ $Format$</query>
           <query>$CIDR16$
 $CIDRFormat$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="count">
