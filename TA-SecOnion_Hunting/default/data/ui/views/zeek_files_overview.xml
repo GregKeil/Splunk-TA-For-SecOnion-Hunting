@@ -41,6 +41,7 @@
         <search base="BaseSearch">
           <query>| stats count</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
@@ -57,6 +58,7 @@
 $Format$
 </query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="Count">
@@ -78,6 +80,7 @@ $Format$
           <query>| where like (file_name, "%.txt")
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="Count">
@@ -99,6 +102,7 @@ $Format$</query>
           <query>| where NOT (like(file_name, "%.txt") OR like(file_name, "%.ps1") OR like(file_name, "%.exe"))
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
         <format type="color" field="Count">
