@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SSH (V2.0.2)</label>
+  <label>Zeek SSH (V2.0.3)</label>
   <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <search id="BaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.src_ip, SSH.dest_ip, SSH.dest_port, SSH.server, _time
@@ -16,6 +16,24 @@
 | sort -count
 | appendpipe [| stats count | where count=0 | eval "orig_subnet"="No Instances Found"]
 | rename orig_subnet AS "Source Subnet", resp_subnet AS "Destination Subnet"</set>
+      <set token="IPEval">| eval ExternalSouce = case(
+cidrmatch("10.0.0.0/8",id.orig_h),"False",
+cidrmatch("172.16.0.0/12",id.orig_h),"False",
+cidrmatch("192.168.0.0/16",id.orig_h),"False",
+isnull(id.orig_h) OR like(id.orig_h,""), "False",
+match(id.orig_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")
+
+| eval ExternalDest = case(
+cidrmatch("10.0.0.0/8",id.resp_h),"False",
+cidrmatch("172.16.0.0/12",id.resp_h),"False",
+cidrmatch("192.168.0.0/16",id.resp_h),"False",
+isnull(id.resp_h) OR like(id.resp_h,""), "False",
+match(id.resp_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
+      <set token="CIDR16">| rex field=id.orig_h "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval orig_subnet=orig_subnet + ".0.0/16"
+| rex field=id.resp_h "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval resp_subnet=resp_subnet + ".0.0/16"
+| where !like (client, "-")</set>
     </progress>
     <done>
       <set token="Loading">1</set>
@@ -41,12 +59,8 @@
     <panel>
       <single>
         <title>Total SSH Logs</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+        <search base="BaseSearch">
+          <query>| stats count</query>
         </search>
         <option name="drilldown">none</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
@@ -71,13 +85,44 @@
   <row>
     <panel>
       <table>
-        <title>Weird SSH Clients</title>
         <search base="BaseSearch">
-          <query>| where !like (client, "-") AND !like (client, "%SSH%")
+          <query>$IPEval$
+| where like (ExternalSouce, "True") AND !like (ExternalDest, "True")
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Client">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Server">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>$IPEval$
+| where !like (ExternalSouce, "True") AND like (ExternalDest, "True")
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Client">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Server">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
         <format type="color" field="count">
           <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
           <scale type="minMidMax"></scale>
@@ -113,15 +158,26 @@ $Format$</query>
   <row>
     <panel>
       <table>
+        <title>Weird SSH Clients</title>
+        <search base="BaseSearch">
+          <query>| where !like (client, "-") AND !like (client, "%SSH%")
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
         <title>CIDR16 Traffic Breakdown</title>
         <search base="BaseSearch">
-          <query>| stats count by id.orig_h, id.resp_h
-
-| rex field=id.orig_h "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
-| eval orig_subnet=orig_subnet + ".0.0/16"
-| rex field=id.resp_h "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
-| eval resp_subnet=resp_subnet + ".0.0/16"
-| where !like (client, "-")
+          <query>$CIDR16$
 $CIDRFormat$</query>
         </search>
         <option name="drilldown">none</option>
