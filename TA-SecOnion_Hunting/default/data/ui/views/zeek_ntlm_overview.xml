@@ -12,7 +12,11 @@
 | sort by -count
 | appendpipe [| stats count | where count=0 | eval "domainname"="No Instances Found"]
 | rename domainname AS "Domain Name", server_tree_name AS "Domain Address", server_dns_computer_name AS "FQDN", src AS "Source IP", dest AS "Destination IP", username AS User, count AS Count</set>
+      <unset token="Loading"></unset>
     </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
     <earliest>$Time.earliest$</earliest>
     <latest>$Time.latest$</latest>
   </search>
@@ -25,6 +29,13 @@
       </default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <single>
