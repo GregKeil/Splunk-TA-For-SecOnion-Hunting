@@ -65,13 +65,9 @@
     <panel>
       <table>
         <title>Strange Public Display Strings</title>
-        <search>
+        <search base="BaseSearch">
           <query>| where like (community, "public") AND !like (display_string, "-")
 $Format$</query>
-          <earliest>$Time.earliest$</earliest>
-          <latest>$Time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
         </search>
         <option name="link.visible">false</option>
         <option name="drilldown">none</option>
