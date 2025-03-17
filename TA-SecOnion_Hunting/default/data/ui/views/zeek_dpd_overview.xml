@@ -1,7 +1,7 @@
 <form version="1.1" theme="dark">
   <label>Zeek DPD Overview (V1.0.2)</label>
   <search id="dpd_basesearch">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DPD by DPD.analyzer, DPD.src_ip, DPD.dest_ip, DPD.dest_port, DPD.failure_reason
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DPD by DPD.analyzer, DPD.src_ip, DPD.dest_ip, DPD.dest_port, DPD.failure_reason, _time
 | rename DPD.analyzer AS analyzer, DPD.src_ip AS src_ip, DPD.dest_ip AS dest_ip, DPD.dest_port AS dest_port, DPD.failure_reason AS failure_reason
     </query>
     <progress>
