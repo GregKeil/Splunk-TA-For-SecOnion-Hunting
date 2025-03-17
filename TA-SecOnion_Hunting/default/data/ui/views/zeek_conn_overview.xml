@@ -1,5 +1,6 @@
 <form version="1.1" theme="dark">
-  <label>Zeek Conn Overview</label>
+  <label>Zeek Conn Overview (V1.0.2)</label>
+  <description>V1 Additions: Initial Dashboard</description>
   <search id="BaseSearch">
     <query>
       | tstats summariesonly=f count from datamodel=Zeek_Suite.Conn by Conn.src_ip, Conn.src_port, Conn.dest_ip, Conn.dest_port, Conn.conn_state, Conn.service, Conn.uid, _time
@@ -37,10 +38,12 @@
       </default>
     </input>
   </fieldset>
-    <row rejects="$Loading$">
-    <html>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
       <h1>RESULTS LOADING...</h1>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -54,9 +57,11 @@
     </panel>
   </row>
   <row>
-    <html>
-      <h1></h1>
+    <panel>
+      <html>
+      <h1/>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -67,13 +72,19 @@
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#1182F3" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
       </table>
     </panel>
   </row>
   <row>
-    <html>
-      <h1></h1>
+    <panel>
+      <html>
+      <h1/>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -85,6 +96,14 @@ $ByIP$
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Connection State">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
     <panel>
@@ -96,13 +115,23 @@ $ByIP$
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#118832" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Connection State">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
   <row>
-    <html>
-      <h1></h1>
+    <panel>
+      <html>
+      <h1/>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -114,6 +143,14 @@ $ByPort$
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Connection State">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
     <panel>
@@ -125,6 +162,14 @@ $ByPort$
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#118832" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Connection State">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
