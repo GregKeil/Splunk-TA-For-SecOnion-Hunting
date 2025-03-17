@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SNMP (V2.0.1)</label>
+  <label>Zeek SNMP Overview (V2.0.1)</label>
   <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <search id="BaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP by SNMP.community, SNMP.src_ip, SNMP.dest_ip, SNMP.display_string, _time
