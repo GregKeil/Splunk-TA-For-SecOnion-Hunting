@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek DPD Overview</label>
+  <label>Zeek DPD Overview (V1.0.2)</label>
   <search id="dpd_basesearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DPD by DPD.analyzer, DPD.src_ip, DPD.dest_ip, DPD.dest_port, DPD.failure_reason
 | rename DPD.analyzer AS analyzer, DPD.src_ip AS src_ip, DPD.dest_ip AS dest_ip, DPD.dest_port AS dest_port, DPD.failure_reason AS failure_reason
@@ -25,7 +25,7 @@
       <set token="Format">| sort by -count
 | appendpipe [| stats count | where count=0 | eval "Instance"="No Instances Found" | table Instance]
 | rename analyzer AS "Detected Protocol", orig_subnet AS "Source CIDR16", resp_subnet AS "Destination CIDR16", dest_port AS "Destination Port", failure_reason AS "Failure Reason", count AS Count, dest_ip AS "Destination IP", src_ip AS "Source IP"</set>
-    <set token="Loading">1</set>
+      <set token="Loading">1</set>
     </done>
     <earliest>$Time.earliest$</earliest>
     <latest>$Time.latest$</latest>
@@ -39,16 +39,25 @@
       </default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <single>
-        <title>Total DPD Logs (Excluding Known Scanners)</title>
+        <title>Total DPD Logs</title>
         <search base="dpd_basesearch">
           <query>| stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="link.visible">false</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
     </panel>
   </row>
