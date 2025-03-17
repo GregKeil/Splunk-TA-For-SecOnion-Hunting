@@ -1,5 +1,21 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SIP Overview</label>
+  <label>Zeek SIP Overview (V2.0.2)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <search id="Request">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.uri, SIP.user_agent, SIP.seq, SIP.src_ip,  SIP.dest_ip, SIP.request_from
+| rename SIP.uri AS uri, SIP.user_agent AS user_agent, SIP.seq AS seq, SIP.src_ip AS id.orig_h,  SIP.dest_ip AS id.resp_h, SIP.request_from AS request_from
+| where !like (seq, "-")
+| rex field=seq mode=sed "s/\d//g"</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="Response">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.status_code, SIP.status_msg, SIP.warning, SIP.src_ip, SIP.dest_ip, SIP.response_from
+| rename SIP.status_code AS status_code, SIP.status_msg AS status_msg, SIP.warning AS warning, SIP.src_ip AS id.orig_h,  SIP.dest_ip AS id.resp_h, SIP.response_from AS response_from
+| where !like (status_msg, "-")</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="time">
       <label>Time Selection</label>
@@ -12,39 +28,64 @@
   <row>
     <panel>
       <single>
-        <title>Total SIP Logs (Excluding Known Scanners)</title>
+        <title>Total SIP Logs</title>
         <search>
           <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Top Requests</title>
+        <search base="Request">
+          <query>| stats count by seq</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="link.visible">0</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Top Status Codes</title>
+        <search base="Response">
+          <query>| stats count by status_code</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="link.visible">0</option>
+      </chart>
     </panel>
   </row>
   <row>
     <panel>
       <table>
         <title>SIP Requests</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.uri, SIP.user_agent, SIP.seq, SIP.id_orig_h,  SIP.id_resp_h, SIP.request_from
-| rename SIP.uri AS uri, SIP.user_agent AS user_agent, SIP.seq AS seq, SIP.id_orig_h AS id.orig_h,  SIP.id_resp_h AS id.resp_h, SIP.request_from AS request_from
-
-| where !like (seq, "63104 OPTIONS") AND !like (seq, "-")
-
-| sort -count
+        <search base="Request">
+          <query>| sort -count
 | appendpipe [| stats count | where count=0 | eval "uri"="No Instances Found"]
 | rename uri AS URI, user_agent AS "User Agent", seq AS "Request Type", id.orig_h AS Source, id.resp_h AS Destination, request_from AS "Destination Info"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="URI">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
@@ -52,22 +93,26 @@
     <panel>
       <table>
         <title>SIP Responses</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.status_code, SIP.status_msg, SIP.warning, SIP.id_orig_h, SIP.id_resp_h, SIP.response_from
-| rename SIP.status_code AS status_code, SIP.status_msg AS status_msg, SIP.warning AS warning, SIP.id_orig_h AS id.orig_h,  SIP.id_resp_h AS id.resp_h, SIP.response_from AS response_from
-
-| where !like (status_msg, "-")
-
-| sort -count
+        <search base="Response">
+          <query>| sort -count
 | appendpipe [| stats count | where count=0 | eval "status_code"="No Instances Found"]
 | rename status_code AS "Status Code",status_msg AS Status, warning AS Message, id.orig_h AS Source, id.resp_h AS Destination, response_from AS "Destination Info", count AS Count</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Status Code">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Status">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
