@@ -4,15 +4,19 @@
   <search id="BaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5, _time
 | rename Files.attachment_type AS attachment_type, Files.file_name AS file_name, Files.md5 AS md5
-| eval file_name=lower(file_name)
+| eval file_name=lower(file_name)</query>
     <earliest>$Time.earliest$</earliest>
     <latest>$Time.latest$</latest>
     <progress>
+      <unset token="Loading"></unset>
       <set token="Format">| stats count by attachment_type, file_name, md5
 | sort by -count
 | appendpipe [| stats count | where count=0 | eval "attachment_type"="No Instances Found"]
 | rename attachment_type AS "File Type", file_name AS Filename, md5 AS MD5, count AS Count</set>
     </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
   </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="Time">
@@ -23,6 +27,13 @@
       </default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <single>
