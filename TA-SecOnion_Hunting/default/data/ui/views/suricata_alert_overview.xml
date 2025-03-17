@@ -1,13 +1,13 @@
 <form version="1.1" theme="dark" onunloadCancelJobs="true">
-  <label>Suricata Alert Overview</label>
+  <label>Suricata Alert Overview (V5.9.5)</label>
+  <description>V5 Additions: Dashboard Now Integrates Drilldown</description>
   <search id="MainBaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
 | rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
 | table severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
 
 ```Filter Out Specific Rules Here```
-| where !like(signature, "ET INFO External IP%")
-      
+
 </query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
@@ -57,7 +57,7 @@ match(src_ip,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
       <unset token="cid"></unset>
     </done>
   </search>
-  <search id="ScannerBaseSearch">
+  <search id="CompleteBaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Suricata_Suite.alerts by alerts.severity, alerts.signature, alerts.category, alerts.src_ip, alerts.src_port, alerts.dest_ip, alerts.dest_port, alerts.proto, alerts.sid, alerts.community_id, alerts.payload_printable, _time
 | rename alerts.severity AS severity, alerts.signature AS signature, alerts.category AS category, alerts.src_ip AS src_ip, alerts.src_port AS src_port, alerts.dest_ip AS dest_ip, alerts.dest_port AS dest_port, alerts.proto AS proto, alerts.sid AS SID, alerts.community_id AS community_id, alerts.payload_printable AS payload_printable
 | stats count by severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
@@ -98,9 +98,11 @@ match(src_ip,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
         <search base="MainBaseSearch">
           <query>| stats count</query>
         </search>
-        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
     </panel>
   </row>
@@ -165,7 +167,7 @@ $Formating$</query>
     <panel depends="$showscanner$">
       <title>Scanners Currently Not Be Filtered In Known_Scanners.csv (Pre-Datamodel Ingest)</title>
       <table>
-        <search base="ScannerBaseSearch">
+        <search base="CompleteBaseSearch">
           <done>
             <condition match="$job.resultCount$ == 0">
               <unset token="showscanner"></unset>
@@ -315,7 +317,7 @@ $Formating$</query>
   <row depends="$cid$">
     <panel>
       <table>
-        <search base="MainBaseSearch">
+        <search base="CompleteBaseSearch">
           <query>| where like (community_id, $cid|s$)
 | eval Time=_time
 | appendpipe[| where payload_printable="" | eval payload_printable="No Payload"]
