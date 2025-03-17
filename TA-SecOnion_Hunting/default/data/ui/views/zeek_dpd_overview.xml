@@ -95,8 +95,11 @@ $Format$</query>
             <unset token="subnet"></unset>
           </done>
         </search>
-        <option name="refresh.display">progressbar</option>
-        <option name="link.visible">false</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
         <drilldown>
           <set token="analyzer">$row.Detected Protocol$</set>
         </drilldown>
@@ -125,8 +128,11 @@ $Format$</query>
             <unset token="subnet"></unset>
           </done>
         </search>
-        <option name="refresh.display">progressbar</option>
-        <option name="link.visible">false</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
         <drilldown>
           <set token="failreason">$row.Failure Reason$</set>
         </drilldown>
@@ -156,8 +162,11 @@ $Format$</query>
             <unset token="subnet"></unset>
           </done>
         </search>
-        <option name="refresh.display">progressbar</option>
-        <option name="link.visible">false</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
         <drilldown>
           <set token="subnet">$click.value2$</set>
         </drilldown>
@@ -185,8 +194,11 @@ $SimpleFail$
 $Format$</query>
         </search>
         <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="link.visible">false</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
       </table>
     </panel>
   </row>
