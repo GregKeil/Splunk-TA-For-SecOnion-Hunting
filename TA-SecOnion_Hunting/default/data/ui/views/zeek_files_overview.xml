@@ -51,6 +51,19 @@
   </row>
   <row>
     <panel>
+      <chart>
+        <title>Top File Types</title>
+        <search base="BaseSearch">
+          <query>| stats count by attachment_type</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <table>
         <title>EXE Files &amp; PS1 Scripts</title>
         <search base="BaseSearch">
