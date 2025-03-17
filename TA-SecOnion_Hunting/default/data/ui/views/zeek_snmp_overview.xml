@@ -1,5 +1,22 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SNMP Overview</label>
+  <label>Zeek SNMP (V2.0.1)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <search id="BaseSearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP by SNMP.community, SNMP.src_ip, SNMP.dest_ip, SNMP.display_string, _time
+| rename SNMP.community AS community, SNMP.src_ip AS src, SNMP.dest_ip AS dest, SNMP.display_string AS display_string</query>
+    <progress>
+      <unset token="Loading"></unset>
+      <set token="Format">| stats count by community, src, dest, display_string
+| sort by -count
+| appendpipe [| stats count | where count=0 | eval "community"="No Instances Found"]
+| rename community AS Community, src AS "Source IP", dest AS "Destination IP", display_string AS "Display String", count AS Count</set>
+    </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
+    <earliest>$Time.earliest$</earliest>
+    <latest>$Time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="Time">
       <label>Time Selection</label>
@@ -9,18 +26,37 @@
       </default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <single>
-        <title>Total SNMP Logs (Excluding Known Scanners)</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP</query>
-          <earliest>$Time.earliest$</earliest>
-          <latest>$Time.latest$</latest>
+        <title>Total SNMP Logs</title>
+        <search base="BaseSearch">
+          <query>| stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Top Communities</title>
+        <search base="BaseSearch">
+          <query>| stats count by community</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
     </panel>
   </row>
   <row>
@@ -28,13 +64,8 @@
       <table>
         <title>Strange Public Display Strings</title>
         <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP by SNMP.community, SNMP.src, SNMP.dest, SNMP.display_string
-| rename SNMP.community AS community, SNMP.src AS src, SNMP.dest AS dest, SNMP.display_string AS display_string
-
-| where like (community, "public") AND !like (display_string, "-")
-
-| appendpipe [| stats count | where count=0 | eval "community"="No Instances Found"]
-| rename community AS Community, src AS "Source IP", dest AS "Destination IP", display_string AS "Display String", count AS Count</query>
+          <query>| where like (community, "public") AND !like (display_string, "-")
+$Format$</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
           <refresh>5m</refresh>
@@ -42,6 +73,14 @@
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Community">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
@@ -49,19 +88,52 @@
     <panel>
       <table>
         <title>Strange Communities</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SNMP by SNMP.community, SNMP.src, SNMP.dest, SNMP.display_string
-| rename SNMP.community AS community, SNMP.src AS src, SNMP.dest AS dest, SNMP.display_string AS display_string
-
-| where !like (community, "public")
-
-| appendpipe [| stats count | where count=0 | eval "community"="No Instances Found"]
-| rename community AS Community, src_ip AS "Source IP", dest_ip AS "Destination IP", display_string AS "Display String"</query>
-          <earliest>$Time.earliest$</earliest>
-          <latest>$Time.latest$</latest>
+        <search base="BaseSearch">
+          <query>| where NOT (like(community, "public") OR like(community, "private"))
+$Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Community">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Public Community Access</title>
+        <search base="BaseSearch">
+          <query>| where like (community, "public")
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Private Community Access</title>
+        <search base="BaseSearch">
+          <query>| where like (community, "private")
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
       </table>
     </panel>
   </row>
