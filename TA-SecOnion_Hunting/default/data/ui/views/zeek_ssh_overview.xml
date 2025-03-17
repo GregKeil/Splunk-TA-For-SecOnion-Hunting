@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SSH (V2.0.3)</label>
+  <label>Zeek SSH Overview (V2.0.3)</label>
   <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <search id="BaseSearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.src_ip, SSH.dest_ip, SSH.dest_port, SSH.server, _time
