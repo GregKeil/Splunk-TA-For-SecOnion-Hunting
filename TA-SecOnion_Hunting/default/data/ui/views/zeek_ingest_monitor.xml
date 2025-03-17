@@ -1,5 +1,5 @@
 <form version="1.1" theme="dark">
-  <label>Zeek Ingest Monitor (V1.0)</label>
+  <label>Zeek Ingest Monitor (V1.0.1)</label>
   <description>V1: Dashboard created</description>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="Time">
