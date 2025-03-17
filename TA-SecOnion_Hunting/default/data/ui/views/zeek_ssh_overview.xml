@@ -1,5 +1,26 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SSH Overview</label>
+  <label>Zeek SSH (V2.0.2)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <search id="BaseSearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.src_ip, SSH.dest_ip, SSH.dest_port, SSH.server, _time
+| rename SSH.client AS client, SSH.src_ip AS id.orig_h, SSH.dest_ip AS id.resp_h, SSH.dest_port AS port, SSH.server AS server</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+    <progress>
+      <unset token="Loading"></unset>
+      <set token="Format">| stats count by client, id.orig_h, id.resp_h, port, server
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "client"="No Instances Found"]
+| rename id.orig_h AS Source, id.resp_h AS Destination, port AS Port, server AS Server, client AS Client</set>
+      <set token="CIDRFormat">| stats count by orig_subnet, resp_subnet
+| sort -count
+| appendpipe [| stats count | where count=0 | eval "orig_subnet"="No Instances Found"]
+| rename orig_subnet AS "Source Subnet", resp_subnet AS "Destination Subnet"</set>
+    </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
+  </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="time">
       <label>Time Selection</label>
@@ -9,10 +30,17 @@
       </default>
     </input>
   </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <single>
-        <title>Total SSH Logs (Excluding Known Scanners)</title>
+        <title>Total SSH Logs</title>
         <search>
           <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH</query>
           <earliest>$time.earliest$</earliest>
@@ -21,30 +49,39 @@
           <refreshType>delay</refreshType>
         </search>
         <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Top Destination Ports</title>
+        <search base="BaseSearch">
+          <query>| stats count by port</query>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
     </panel>
   </row>
   <row>
     <panel>
       <table>
         <title>Weird SSH Clients</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.id_orig_h, SSH.id_resp_h
-| rename SSH.client AS client, SSH.id_orig_h AS id.orig_h, SSH.id_resp_h AS id.resp_h
-
-| where !like (client, "-") AND !like (client, "%SSH%")
-
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "client"="No Instances Found"]
-| rename client AS "Client", id.orig_h AS Source, id.resp_h AS Destination</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+        <search base="BaseSearch">
+          <query>| where !like (client, "-") AND !like (client, "%SSH%")
+$Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
       </table>
     </panel>
   </row>
@@ -52,22 +89,24 @@
     <panel>
       <table>
         <title>Weird SSH Ports</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.id_orig_h, SSH.id_resp_h, SSH.dest_port, SSH.server
-| rename SSH.client AS client, SSH.id_orig_h AS id.orig_h, SSH.id_resp_h AS id.resp_h, SSH.dest_port AS port, SSH.server AS server
-
-| where !like (port, "22")
-
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "client"="No Instances Found"]
-| rename id.orig_h AS Source, id.resp_h AS Destination, id.resp_p AS Port, server AS Server, client AS Client</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+        <search base="BaseSearch">
+          <query>| where !like (port, "22")
+$Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Client">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Server">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
@@ -75,27 +114,22 @@
     <panel>
       <table>
         <title>CIDR16 Traffic Breakdown</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSH by , SSH.id_orig_h, SSH.id_resp_h
-| rename SSH.id_orig_h AS id.orig_h, SSH.id_resp_h AS id.resp_h
+        <search base="BaseSearch">
+          <query>| stats count by id.orig_h, id.resp_h
 
 | rex field=id.orig_h "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
 | eval orig_subnet=orig_subnet + ".0.0/16"
 | rex field=id.resp_h "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
 | eval resp_subnet=resp_subnet + ".0.0/16"
 | where !like (client, "-")
-| stats count by orig_subnet, resp_subnet
-
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "orig_subnet"="No Instances Found"]
-| rename orig_subnet AS "Source Subnet", resp_subnet AS "Destination Subnet"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+$CIDRFormat$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
       </table>
     </panel>
   </row>
