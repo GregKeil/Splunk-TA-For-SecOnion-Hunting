@@ -1,6 +1,6 @@
 <form version="1.1" theme="dark">
   <label>Zeek DHCP Overview (V2.3.1)</label>
-  <description>V3 Additions: Dashboard Now Integrates Drilldown Functionality</description>
+  <description>V2 Additions: Dashboard Now Integrates Drilldown Functionality</description>
   <search id="dhcp_basesearch">
     <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac
 | rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
