@@ -77,7 +77,7 @@
       </chart>
     </panel>
     <panel>
-      <title>Top Source Subnets</title>
+      <title>Top Source CIDR16 Subnets</title>
       <chart>
         <search base="BaseSearch">
           <query>$CIDR16$
