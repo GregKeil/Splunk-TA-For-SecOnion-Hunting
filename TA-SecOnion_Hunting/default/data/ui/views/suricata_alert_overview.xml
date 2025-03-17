@@ -7,66 +7,6 @@
 | table severity, signature, category, src_ip, src_port, dest_ip, dest_port, proto, SID, community_id, payload_printable, _time
 
 ```Filter Out Specific Rules Here```
-| where NOT (
-    SID IN ("2008116", "2008120", "2101413", "2101411", "2001219", "2029340", "2003068", "2031071", "2033078", "2100371", "2027766", "2016149", "2100366", "2016870", "2022371", "2018489", "2022547", "2103276", "2102251", "2027758", "2025703", "2019401", "2030917", "2100518", "2013933", "2027757", "2026850", "2026849", "2100227", "2033077", "2027203", "2035090", "2035089", "2012888", "2033355", "2035026", "2029994", "2015744", "2035465", "2027397", "2000334", "2035466", "2048555", "2045757")
-    OR like(signature, "ET SCAN%")
-    OR like(signature, "ET INFO External IP%")
-    OR like(payload_printable, "%nessus%")
-    OR like(payload_printable, "%Nmap%")
-    OR like(payload_printable, "%f.s.t.m.p%")
-    OR like(payload_printable, "%f.s._.a.c.t.i.o.n%")
-    OR like(payload_printable, "%f.s.p.r.o.c.s.v.c%")
-    OR like(payload_printable, "%S.C.C.M.C.o.n.t.e.n.t.L.i.b%")
-    OR like(payload_printable, "%NIC_Power_Management_Discovery.ps1%")
-    OR like(payload_printable, "%S.C.C.M.\%")
-    OR like(payload_printable, "%c.c.m.c.a.c.h.e.\%")
-)
-
-```Payload Filtering Goes Here```
-| where NOT (
-
-(like(src_ip, "137.232.%") AND (
-    like(payload_printable, "%S.y.s.m.o.n%%") OR
-    like(payload_printable, "%S.Y.S.M.O.N%")))
-
-OR (like(signature, "ET INFO SMB2 NT Create AndX Request For an Executable File") AND (
-    like(payload_printable, "%SMB@%m.e.t.a.d.a.t.a...i.n.i%")))
-    
-OR (like(signature, "ET INFO SMB Executable File Transfer") AND (
-    like(payload_printable, "%SMB@%L.TKL.TKL.TKk-)K\.TKk-:KR.TKk-9K..TK...KO.TKL.UK..TKk-%KM.TKk-,KM.TKRichL.TK%") OR
-    like(payload_printable, "%SMB@%U.#~4.p~4.p~4.pY..pw4.pY..pF4.pY..p.4.p...pm4.p~4.p.4.pY..pr4.pY..p.4.pY..p.4.pRich~4.p%") OR
-    like(payload_printable, "%SMB@%0..o0..o0..o.I.o%..o.I.oB..o.I.o;..o0..o...o.I.oa..o.I.o1..o.I.o1..oRich0..o%") OR
-    like(payload_printable, "%SMB@%q.R.q.R.q.R.%.V.U.R.%.Q.S.R.%.W...R.%.S.x.R.q.S.S.R.%.[.;.R.%...p.R.%.P.p.R.Richq.R%") OR
-    like(payload_printable, "%SMB@%L.%.!.%.7.%.#.%.#.%.+.%.Rich.%.PE%") OR
-    like(payload_printable, "%SMB@%m.e.t.a.d.a.t.a...i.n.i%") OR
-    like(payload_printable, "%SMB@%&gt;ej._.9._.9._.9._.9._.9. .8._.9. .8._.9. .8=_.9. %8._.9._%9.^.9. .8._.9. .9._.9. .8._.9Rich._.9%"))) 
-
-OR (like(signature, "ET INFO Windows Powershell User-Agent Usage") AND (
-    like(payload_printable, "GET /SMS_DP_SMSPKG$/MC000203/exception.sites HTTP/1.1%")))
-    
-OR (like(signature, "ET INFO WMIC WMI Request Over SMB - Likely Lateral Movement") AND (
-    like(payload_printable, "%c:\windows\system32\fsprocsvc.exe fs-execute % fsproc_exec%")))
-    
-OR (like(signature, "ET INFO Powershell Command With Execution Bypass Argument Over SMB - Likely Lateral Movement") AND (
-    like(payload_printable, "%SMB@%C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -Command \"(Get-CimInstance -ClassName Win32_BIOS).SerialNumber\"%") OR
-    like(payload_printable, "%SMB@%c:\windows\system32\fsprocsvc.exe fs-execute % fsproc_exec%")))
-    
-OR (like(signature, "ET INFO PE EXE or DLL Windows file download HTTP") AND (
-    like(payload_printable, "%L.%.!.%.7.%.#.%.#.%.+.%.Rich.%.PE%") OR
-    !like(payload_printable, "HTTP%"))) ```In place until log parsing issue is fixed```
-    
-OR (like(signature, "ET INFO SMB2 NT Create AndX Request For a DLL File - Possible Lateral Movement") AND (
-    like(payload_printable, "%SMB@%q.R.q.R.q.R.%.V.U.R.%.Q.S.R.%.W...R.%.S.x.R.q.S.S.R.%.[.;.R.%...p.R.%.P.p.R.Richq.R%") OR
-    like(payload_printable, "%w.i.n.d.o.w.s.\.s.y.s.t.e.m.3.2.\.W.U.A.U.E.N.G...D.L.L.") OR
-    like(payload_printable, "%W.I.N.D.O.W.S.\.S.y.s.t.e.m.3.2.\.w.u.a.p.i...d.l.l.")))
-    
-OR (like(signature, "ET INFO PS1 Powershell File Request") AND (
-    like(payload_printable, "%sccm?/%")))
-
-OR (like(signature, "ET INFO SMB2 NT Create AndX Request For a .sys File - Possible Lateral Movement") AND (
-    like(payload_printable, "%p.a.g.e.f.i.l.e...s.y.s%")))
-)
-
 </query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
