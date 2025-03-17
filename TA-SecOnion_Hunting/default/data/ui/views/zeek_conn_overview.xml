@@ -52,6 +52,7 @@
         <search base="BaseSearch">
           <query>| stats count</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="underLabel">Excluding Known Scanners</option>
@@ -73,6 +74,7 @@
           <query>| stats count by service
 | where service!="-"</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -85,6 +87,7 @@
           <query>$CIDR16$
 | stats count by orig_subnet</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -106,6 +109,7 @@
           <query>$CIDR16$
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <format type="color" field="count">
           <colorPalette type="minMidMax" maxColor="#1182F3" minColor="#FFFFFF"></colorPalette>
@@ -130,6 +134,7 @@ $Format$</query>
 $ByIP$
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <format type="color" field="count">
           <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
@@ -149,6 +154,7 @@ $Format$</query>
 $ByIP$
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <format type="color" field="count">
           <colorPalette type="minMidMax" maxColor="#118832" minColor="#FFFFFF"></colorPalette>
@@ -177,6 +183,7 @@ $Format$</query>
 $ByPort$
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <format type="color" field="count">
           <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
@@ -196,6 +203,7 @@ $Format$</query>
 $ByPort$
 $Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <format type="color" field="count">
           <colorPalette type="minMidMax" maxColor="#118832" minColor="#FFFFFF"></colorPalette>
