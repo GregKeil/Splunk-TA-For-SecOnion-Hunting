@@ -63,6 +63,19 @@
   </row>
   <row>
     <panel>
+      <chart>
+        <title>Top Protocols</title>
+        <search base="dpd_basesearch">
+          <query>| stats count by analyzer</query>
+        </search>
+        <option name="link.visible">0</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <html>
       <h2>Unique Protocols Detected</h2>
       <h3>Select A Protocol</h3>
