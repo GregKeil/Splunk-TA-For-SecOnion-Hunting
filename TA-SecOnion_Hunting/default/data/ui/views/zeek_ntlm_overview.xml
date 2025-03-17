@@ -1,5 +1,21 @@
 <form version="1.1" theme="dark">
-  <label>Zeek NTLM Overview</label>
+  <label>Zeek NTLM (V2.0.2)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
+  <search id="BaseSearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.NTLM by NTLM.domainname,NTLM.server_tree_name,NTLM.server_dns_computer_name,NTLM.src_ip,NTLM.dest_ip,NTLM.username, _time
+| rename NTLM.domainname AS domainname,NTLM.server_tree_name AS server_tree_name,NTLM.server_dns_computer_name AS server_dns_computer_name,NTLM.src_ip AS src,NTLM.dest_ip AS dest,NTLM.username AS username
+| eval domainname=upper(domainname)
+| where NOT (like(username, "%$"))
+</query>
+    <progress>
+      <set token="Format">| stats count by domainname, server_tree_name, server_dns_computer_name, src, dest, username
+| sort by -count
+| appendpipe [| stats count | where count=0 | eval "domainname"="No Instances Found"]
+| rename domainname AS "Domain Name", server_tree_name AS "Domain Address", server_dns_computer_name AS "FQDN", src AS "Source IP", dest AS "Destination IP", username AS User, count AS Count</set>
+    </progress>
+    <earliest>$Time.earliest$</earliest>
+    <latest>$Time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="Time">
       <label>Time Selection</label>
@@ -20,6 +36,7 @@
           <refresh>5m</refresh>
           <refreshType>delay</refreshType>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </single>
@@ -27,27 +44,44 @@
   </row>
   <row>
     <panel>
+      <chart>
+        <title>Top FQDNs</title>
+        <search base="BaseSearch">
+          <query>| stats count by server_dns_computer_name</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <table>
         <title>NTLM Admin &amp; Domain Admin Authentication</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.NTLM by NTLM.domainname,NTLM.server_tree_name,NTLM.server_dns_computer_name,NTLM.src,NTLM.dest,NTLM.username
-| rename NTLM.domainname AS domainname,NTLM.server_tree_name AS server_tree_name,NTLM.server_dns_computer_name AS server_dns_computer_name,NTLM.src AS src,NTLM.dest AS dest,NTLM.username AS username
-
-| eval domainname=upper(domainname)
-| where !like (domainname, "$") 
-| where !like (username, "%$")
-| where like (username, "%.da") OR like (username, "%.adm") or like (username, "Administrator")
-
-| sort by -count
-| appendpipe [| stats count | where count=0 | eval "domainname"="No Instances Found"]
-| rename domainname AS "Domain Name", server_tree_name AS "Domain Address", server_dns_computer_name AS "FQDN", src AS "Source IP", dest AS "Destination IP", username AS User, count AS Count</query>
-          <earliest>$Time.earliest$</earliest>
-          <latest>$Time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+        <search base="BaseSearch">
+          <query>| where like (username, "%.da") OR like (username, "%.adm") or like (username, "Administrator")
+$Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="Domain Name">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Domain Address">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="FQDN">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
@@ -55,25 +89,59 @@
     <panel>
       <table>
         <title>NTLM Service Account Authentication</title>
-        <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.NTLM by NTLM.domainname,NTLM.server_tree_name,NTLM.server_dns_computer_name,NTLM.src,NTLM.dest,NTLM.username
-| rename NTLM.domainname AS domainname,NTLM.server_tree_name AS server_tree_name,NTLM.server_dns_computer_name AS server_dns_computer_name,NTLM.src AS src,NTLM.dest AS dest,NTLM.username AS username
-
-| eval domainname=upper(domainname)
-| where !like (domainname, "$")
-| where !like (username, "%$")
-| where like (username, "%.svc") OR like (username, "%svc%")
-
-| sort by -count
-| appendpipe [| stats count | where count=0 | eval "domainname"="No Instances Found"]
-| rename domainname AS "Domain Name", server_tree_name AS "Domain Address", server_dns_computer_name AS "FQDN", src AS "Source IP", dest AS "Destination IP", username AS User, count AS Count</query>
-          <earliest>$Time.earliest$</earliest>
-          <latest>$Time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+        <search base="BaseSearch">
+          <query>| where like (username, "%.svc") OR like (username, "%svc%")
+$Format$</query>
         </search>
+        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="Domain Name">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Domain Address">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="FQDN">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Other Domain Authentication</title>
+        <search base="BaseSearch">
+          <query>| where NOT (like(username, "%.da") OR like(username, "%.adm") OR like(username, "Administrator") OR like(username, "%svc%"))
+$Format$</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Domain Name">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Domain Address">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="FQDN">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
       </table>
     </panel>
   </row>
