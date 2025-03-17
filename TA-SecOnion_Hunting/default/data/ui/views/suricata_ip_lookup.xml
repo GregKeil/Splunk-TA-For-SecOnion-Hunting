@@ -52,7 +52,7 @@
       <initialValue>1.1.1.1</initialValue>
     </input>
   </fieldset>
-    <row rejects="$Loading$">
+  <row rejects="$Loading$">
     <panel>
       <html>
       <h1>RESULTS LOADING...</h1>
@@ -66,9 +66,11 @@
         <search base="TstatsBaseSearch">
           <query>| stats count</query>
         </search>
-        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Excluding Known Scanners</option>
       </single>
     </panel>
   </row>
@@ -206,7 +208,7 @@ $Formating$</query>
         <search base="TstatsBaseSearch">
           <query>| where like (community_id, $cid|s$)
 | eval Time=_time
-| table severity, SID, src_ip, dest_ip, payload_printable, community_id, Time
+| table severity, SID, src_ip, dest_ip, payload_printable, community_id, Time, _time
 | appendpipe[| where payload_printable="" | eval payload_printable="No Payload"]
 | where !like (payload_printable, "")
 $HighToLow$
