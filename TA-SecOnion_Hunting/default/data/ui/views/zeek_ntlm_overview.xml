@@ -2,7 +2,7 @@
   <label>Zeek NTLM Overview (V2.0.2)</label>
   <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <search id="BaseSearch">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.NTLM by NTLM.domainname,NTLM.server_tree_name,NTLM.server_dns_computer_name,NTLM.src_ip,NTLM.dest_ip,NTLM.username, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.NTLM by NTLM.domainname,NTLM.server_tree_name,NTLM.server_dns_computer_name,NTLM.src_ip,NTLM.dest_ip,NTLM.username, _time
 | rename NTLM.domainname AS domainname,NTLM.server_tree_name AS server_tree_name,NTLM.server_dns_computer_name AS server_dns_computer_name,NTLM.src_ip AS src,NTLM.dest_ip AS dest,NTLM.username AS username
 | eval domainname=upper(domainname)
 | where NOT (like(username, "%$"))
@@ -41,7 +41,7 @@
       <single>
         <title>Total NTLM Logs</title>
         <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.NTLM</query>
+          <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.NTLM</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
           <refresh>5m</refresh>
