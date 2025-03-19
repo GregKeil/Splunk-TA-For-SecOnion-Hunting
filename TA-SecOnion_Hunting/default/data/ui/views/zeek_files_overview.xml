@@ -2,7 +2,7 @@
   <label>Zeek Files Overview (V2.0.2)</label>
   <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <search id="BaseSearch">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.Files by Files.attachment_type, Files.file_name, Files.md5, _time
 | rename Files.attachment_type AS attachment_type, Files.file_name AS file_name, Files.md5 AS md5
 | eval file_name=lower(file_name)</query>
     <earliest>$Time.earliest$</earliest>
