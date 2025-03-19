@@ -1,7 +1,7 @@
 <form version="1.1" theme="dark">
   <label>Zeek DHCP Lookup</label>
   <search id="dhcp_basesearch">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.DHCP by DHCP.orig_mac_oui, DHCP.assigned_addr, DHCP.client_fqdn, DHCP.host_name, DHCP.mac, _time
 | rename DHCP.orig_mac_oui AS orig_mac_oui, DHCP.assigned_addr AS assigned_addr, DHCP.client_fqdn AS client_fqdn, DHCP.host_name AS host_name, DHCP.mac AS mac
 | eval Date=strftime(_time, "%Y/%m/%d")
 
