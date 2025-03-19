@@ -2,7 +2,7 @@
   <label>Zeek SIP Overview (V2.0.2)</label>
   <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <search id="Request">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.uri, SIP.user_agent, SIP.seq, SIP.src_ip,  SIP.dest_ip, SIP.request_from
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SIP by SIP.uri, SIP.user_agent, SIP.seq, SIP.src_ip,  SIP.dest_ip, SIP.request_from
 | rename SIP.uri AS uri, SIP.user_agent AS user_agent, SIP.seq AS seq, SIP.src_ip AS id.orig_h,  SIP.dest_ip AS id.resp_h, SIP.request_from AS request_from
 | where !like (seq, "-")
 | rex field=seq mode=sed "s/\d//g"</query>
@@ -10,7 +10,7 @@
     <latest>$time.latest$</latest>
   </search>
   <search id="Response">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP by SIP.status_code, SIP.status_msg, SIP.warning, SIP.src_ip, SIP.dest_ip, SIP.response_from
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SIP by SIP.status_code, SIP.status_msg, SIP.warning, SIP.src_ip, SIP.dest_ip, SIP.response_from
 | rename SIP.status_code AS status_code, SIP.status_msg AS status_msg, SIP.warning AS warning, SIP.src_ip AS id.orig_h,  SIP.dest_ip AS id.resp_h, SIP.response_from AS response_from
 | where !like (status_msg, "-")</query>
     <earliest>$time.earliest$</earliest>
@@ -30,7 +30,7 @@
       <single>
         <title>Total SIP Logs</title>
         <search>
-          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SIP</query>
+          <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SIP</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
