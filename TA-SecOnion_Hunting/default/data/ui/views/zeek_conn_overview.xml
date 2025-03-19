@@ -3,7 +3,7 @@
   <description>V1 Additions: Initial Dashboard</description>
   <search id="BaseSearch">
     <query>
-      | tstats summariesonly=f count from datamodel=Zeek_Suite.Conn by Conn.src_ip, Conn.src_port, Conn.dest_ip, Conn.dest_port, Conn.conn_state, Conn.service, Conn.uid, _time
+      | tstats summariesonly=t count from datamodel=Zeek_Suite.Conn by Conn.src_ip, Conn.src_port, Conn.dest_ip, Conn.dest_port, Conn.conn_state, Conn.service, Conn.uid, _time
 | rename Conn.src_ip AS src_ip, Conn.src_port AS src_port, Conn.dest_ip AS dest_ip, Conn.dest_port AS dest_port, Conn.conn_state AS conn_state, Conn.service AS service, Conn.uid AS uid
 | where !like(src_ip, "%:%")
     </query>
