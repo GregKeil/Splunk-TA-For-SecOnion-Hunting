@@ -1,5 +1,6 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SMTP Overview</label>
+  <label>Zeek SMTP(V2.0)</label>
+  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="time">
       <label>Time Selection</label>
@@ -9,6 +10,23 @@
       </default>
     </input>
   </fieldset>
+  <search id="BaseSearch_Subject">
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SMTP by SMTP.subject,SMTP.src_ip, SMTP.src_user, SMTP.dest_ip, SMTP.recipient
+| rename SMTP.subject AS subject, SMTP.src_ip AS id.orig_h, SMTP.src_user AS src_user, SMTP.dest_ip AS id.resp_h, SMTP.recipient AS recipient</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <progress>
+            <set token="Format">| sort -count
+| appendpipe [| stats count | where count=0 | eval "last_reply"="No Instances Found"]
+| rename last_reply AS "Last Reply",id.resp_h AS "Destination", src_user AS "Sender", recipient AS "Recipient", id.orig_h AS "Source", subject AS "Subject"</set>
+          </progress>
+  </search>  
+  <search id="BaseSearch_Reply">
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SMTP by SMTP.last_reply, SMTP.src_ip, SMTP.src_user, SMTP.dest_ip, SMTP.recipient
+| rename SMTP.last_reply AS last_reply, SMTP.src_ip AS id.orig_h, SMTP.src_user AS src_user, SMTP.dest_ip AS id.resp_h, SMTP.recipient AS recipient</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+  </search>  
   <row>
     <panel>
       <single>
@@ -27,15 +45,8 @@
     <panel>
       <table>
         <title>Subject Field Overview</title>
-        <search>
-          <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SMTP by SMTP.subject,SMTP.id_orig_h, SMTP.src_user, SMTP.id_resp_h, SMTP.recipient
-| rename SMTP.subject AS subject, SMTP.id_orig_h AS id.orig_h, SMTP.src_user AS src_user, SMTP.id_resp_h AS id.resp_h, SMTP.recipient AS recipient
-
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "subject"="No Instances Found"]
-| rename subject AS "Subject",id.resp_h AS "Destination", src_user AS "Sender", recipient AS "Recipient", id.orig_h AS "Source"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
+        <search base="BaseSearch_Subject">
+          <query>$Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -46,19 +57,8 @@
     <panel>
       <table>
         <title>Last Reply Overview</title>
-        <search>
-          <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SMTP by SMTP.last_reply, SMTP.id_orig_h, SMTP.src_user, SMTP.id_resp_h, SMTP.recipient
-| rename SMTP.last_reply AS last_reply, SMTP.id_orig_h AS id.orig_h, SMTP.src_user AS src_user, SMTP.id_resp_h AS id.resp_h, SMTP.recipient AS recipient
-
-| where !like (last_reply, "%Queued mail for delivery") AND !like (last_reply, "%2.0.0 Service closing transmission channel") AND !like(last_reply, "220 2.0.0 SMTP server ready")
-
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "last_reply"="No Instances Found"]
-| rename last_reply AS "Last Reply",id.resp_h AS "Destination", src_user AS "Sender", recipient AS "Recipient", id.orig_h AS "Source"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <refresh>5m</refresh>
-          <refreshType>delay</refreshType>
+        <search base="BaseSearch_Reply">
+          <query>$Format$</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
