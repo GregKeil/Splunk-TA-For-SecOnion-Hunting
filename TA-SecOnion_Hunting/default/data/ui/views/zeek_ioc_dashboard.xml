@@ -15,7 +15,7 @@
 
 | rename kill_chains AS "Kill Chain",malware_families AS "Malware Family",actors AS "Actor",published_date AS "Publish Date", count AS "Count", malicious_confidence AS "Malicious Confidence"
 | appendpipe [| stats count | where count=0 | eval "Malicious Confidence"="No Instances Found" | eval Instance="-" | eval "Kill Chain"="-" | eval Actor="-" | eval "Malware Family"="-" | eval "Publish Date"="-" | rename count AS Count]</set>
-      <set token="ForEachFunction">| foreach kill_chains malware_families actors malicious_confidence [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]</set>
+      <set token="ForEachFunction">| foreach kill_chains malware_families actors malicious_confidence [ eval &lt;&lt;FIELD&gt;&gt; = if(len(&lt;&lt;FIELD&gt;&gt;) == 0, "N/A", &lt;&lt;FIELD&gt;&gt;)]</set>
     </progress>
     <done>
       <set token="SrcLookup">| lookup local=t IP_iocs.csv indicator AS src_ip OUTPUT kill_chains, published_date, malware_families, actors
