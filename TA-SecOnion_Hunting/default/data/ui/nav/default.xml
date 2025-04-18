@@ -24,6 +24,9 @@
 		<collection label="SIP">
           		<view name="zeek_sip_overview" />
     		</collection>
+		<collection label="SSL">
+          		<view name="zeek_ssl_overview" />
+    		</collection>
 		<collection label="SMTP">
          		<view name="zeek_smtp_overview" />
     		</collection>
