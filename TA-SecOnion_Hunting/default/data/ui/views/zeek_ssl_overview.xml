@@ -1,0 +1,297 @@
+<form version="1.1" theme="dark">
+  <label>Zeek SSL Overview (V1.0.0)</label>
+  <description>V1 Additions: Dashboard Created</description>
+  <search id="BaseSearch">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSL by SSL.cipher, SSL.curve, SSL.dest_ip, SSL.dest_port, SSL.src_ip, SSL.src_port, SSL.ja3, SSL.ja3s, SSL.last_alert, SSL.server_name, _time
+| rename SSL.cipher AS cipher, SSL.curve AS curve, SSL.dest_ip AS dest_ip, SSL.dest_port AS dest_port, SSL.src_ip AS src_ip, SSL.src_port AS src_port, SSL.ja3 AS ja3, SSL.ja3s AS ja3s, SSL.last_alert AS last_alert, SSL.server_name AS server_name</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+    <progress>
+      <unset token="Loading"></unset>
+      <set token="Format">| rename cipher AS Cipher, curve as Curve, dest_ip AS "Destination IP", src_ip AS "Source IP", dest_port AS "Destination Port", ja3 AS JA3, ja3s AS JA3S, last_alert AS "Last Alert", server_name AS "URL", resp_subnet AS "Destination Subnet"
+| sort - count</set>
+      <set token="HideURL">1</set>
+      <set token="HideDest">1</set>
+      <set token="HideCipher">1</set>
+      <set token="HideCurve">1</set>
+      <set token="HideLA">1</set>
+    </progress>
+    <done>
+      <set token="Loading">1</set>
+      <set token="CIDR16">| rex field=dest_ip "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
+| eval resp_subnet=resp_subnet + ".0.0/16"</set>
+    </done>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total SSL Logs</title>
+        <search base="BaseSearch">
+          <query>| stats count</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Excluding Known Scanners</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Top Destination Ports</title>
+        <search base="BaseSearch">
+          <query>| stats count by dest_port</query>
+        </search>
+        <option name="link.visible">false</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Ciphers</title>
+        <search base="BaseSearch">
+          <query>| stats count by cipher
+$Format$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Client">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="Server">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <drilldown>
+          <set token="cypher">$row.Cipher$</set>
+          <set token="HideURL">1</set>
+          <set token="HideLA">1</set>
+          <set token="HideCurve">1</set>
+          <set token="HideDest">1</set>
+          <unset token="HideCipher"></unset>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Curves</title>
+        <search base="BaseSearch">
+          <query>| stats count by curve
+$Format$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <drilldown>
+          <set token="curv">$row.Curve$</set>
+          <set token="HideURL">1</set>
+          <set token="HideCipher">1</set>
+          <set token="HideLA">1</set>
+          <set token="HideDest">1</set>
+          <unset token="HideCurve"></unset>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Last Alerts</title>
+        <search base="BaseSearch">
+          <query>| stats count by last_alert
+$Format$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <drilldown>
+          <set token="LA">$row.Last Alert$</set>
+          <unset token="HideLA"></unset>
+          <set token="HideURL">1</set>
+          <set token="HideCipher">1</set>
+          <set token="HideCurve">1</set>
+          <set token="HideDest">1</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Subnets</title>
+        <search base="BaseSearch">
+          <query>$CIDR16$
+| stats count by resp_subnet
+$Format$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <drilldown>
+          <set token="subnet">$row.Destination Subnet$</set>
+          <set token="HideURL">1</set>
+          <set token="HideCipher">1</set>
+          <set token="HideCurve">1</set>
+          <set token="HideLA">1</set>
+          <unset token="HideDest"></unset>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>URLs</title>
+        <search base="BaseSearch">
+          <query>| stats count by server_name
+$Format$</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <drilldown>
+          <set token="url">$row.URL$</set>
+          <set token="HideLA">1</set>
+          <set token="HideCipher">1</set>
+          <set token="HideCurve">1</set>
+          <set token="HideDest">1</set>
+          <unset token="HideURL"></unset>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
+    <panel rejects="$HideCurve$">
+      <table>
+        <title>Curve Breakdown</title>
+        <search base="BaseSearch">
+          <query>|where like (curve, $curv|s$)
+| stats count by curve, src_ip, dest_ip, dest_port, server_name
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel rejects="$HideCipher$">
+      <table>
+        <title>Cipher Breakdown</title>
+        <search base="BaseSearch">
+          <query>|where like (cipher, $cypher|s$)
+| stats count by cipher, src_ip, dest_ip, dest_port, server_name
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel rejects="$HideDest$">
+      <table>
+        <title>IP Breakdown</title>
+        <search base="BaseSearch">
+          <query>$CIDR16$
+| where like (resp_subnet, $subnet|s$)
+| stats count by src_ip, dest_ip, dest_port
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel rejects="$HideURL$">
+      <table>
+        <title>URL Breakdown</title>
+        <search base="BaseSearch">
+          <query>| where like (server_name, $url|s$)
+| stats count by src_ip, dest_ip, server_name
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel rejects="$HideLA$">
+      <table>
+        <title>SSL Last Alert Breakdown</title>
+        <search base="BaseSearch">
+          <query>| where like (last_alert, $LA|s$)
+| stats count by last_alert, src_ip, dest_ip, dest_port, server_name
+$Format$</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="count">
+          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>
