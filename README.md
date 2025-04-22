@@ -4,7 +4,7 @@
 ### Requirements:
 - **TA For Zeek**
   - https://splunkbase.splunk.com/app/5466
-- _Datamodels must be configured to your indexes and sourcetypes (Does Not Apply When MA-SecOnion Is Utilized)_ 
+- _Datamodels must be configured to your indexes and sourcetypes (Does Not Apply When MA-SecOnion Is Utilized w/ Recommended Inputs.conf)_ 
     
 ### Recommendations: 
 - **Splunk App For Lookup File Editing**
