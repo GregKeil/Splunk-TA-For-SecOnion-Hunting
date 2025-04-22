@@ -9,5 +9,5 @@
 ### Recommendations: 
 - **Splunk App For Lookup File Editing**
   - https://splunkbase.splunk.com/app/1724
-- **MA-For-SecOnion**
+- **MA-SecOnion**
   - https://github.com/GregKeil/Inputs-For-Splunk-UF/tree/main/SecOnion
