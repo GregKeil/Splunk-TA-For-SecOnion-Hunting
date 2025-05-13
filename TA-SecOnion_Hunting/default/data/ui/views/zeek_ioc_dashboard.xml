@@ -264,7 +264,7 @@ $MD5Lookup$
       <single>
         <title>Total MD5 Hits</title>
         <search base="ZeekMD5">
-          <query>| fields MD5
+          <query>| fields md5
 $MD5Lookup$
 | stats count</query>
         </search>
