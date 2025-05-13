@@ -65,7 +65,7 @@
            }
        </style>
      </html>
-    <input type="time" token="TimeSelection" searchWhenChanged="true">
+    <input type="time" token="TimeSelection" searchWhenChanged="false">
       <label>Time Selection</label>
       <default>
         <earliest>-24h@h</earliest>
