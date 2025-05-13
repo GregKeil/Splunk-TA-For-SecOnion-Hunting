@@ -1,7 +1,8 @@
 <form version="1.1" theme="dark">
-  <label>Zeek IOC Dashboard</label>
+  <label>Zeek IOC Dashboard (V2.1.1)</label>
+  <description>V2 Additions: Dashboard has been completely redesigned from the original IOC dashboard</description>
   <search id="ZeekIP">
-    <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.IP by IP.src_ip, IP.dest_ip, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_IOC.IP by IP.src_ip, IP.dest_ip, _time
 | rename IP.src_ip as src, IP.dest_ip AS dest
 	</query>
     <earliest>$TimeSelection.earliest$</earliest>
@@ -15,7 +16,7 @@
 
 | rename kill_chains AS "Kill Chain",malware_families AS "Malware Family",actors AS "Actor",published_date AS "Publish Date", count AS "Count", malicious_confidence AS "Malicious Confidence"
 | appendpipe [| stats count | where count=0 | eval "Malicious Confidence"="No Instances Found" | eval Instance="-" | eval "Kill Chain"="-" | eval Actor="-" | eval "Malware Family"="-" | eval "Publish Date"="-" | rename count AS Count]</set>
-      <set token="ForEachFunction">| foreach kill_chains malware_families actors malicious_confidence [ eval &lt;&lt;FIELD&gt;&gt; = if(len(&lt;&lt;FIELD&gt;&gt;) == 0, "N/A", &lt;&lt;FIELD&gt;&gt;)]</set>
+      <set token="ForEachFunction">| foreach kill_chains malware_families actors malicious_confidence [ eval &lt;&lt;FIELD&gt;&gt; = if(len('&lt;&lt;FIELD&gt;&gt;') == 0, "N/A", '&lt;&lt;FIELD&gt;&gt;')]</set>
     </progress>
     <done>
       <set token="SrcLookup">| lookup local=t IP_iocs.csv indicator AS src_ip OUTPUT kill_chains, published_date, malware_families, actors
@@ -25,7 +26,7 @@
     </done>
   </search>
   <search id="ZeekDNS">
-    <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.DNS by DNS.query, DNS.answer, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_IOC.DNS by DNS.query, DNS.answer, _time
 | rename DNS.query AS query, DNS.answer AS answer
 	</query>
     <earliest>$TimeSelection.earliest$</earliest>
@@ -40,7 +41,7 @@
     </done>
   </search>
   <search id="ZeekMD5">
-    <query>| tstats summariesonly=$SumSearch$ count from datamodel=Zeek_IOC.MD5 by MD5.md5, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_IOC.MD5 by MD5.md5, _time
 | rename MD5.md5 AS md5
 	</query>
     <earliest>$TimeSelection.earliest$</earliest>
@@ -71,22 +72,13 @@
         <latest>now</latest>
       </default>
     </input>
-    <input type="radio" token="SumSearch">
-      <label>Summarized Search</label>
-      <choice value="f">Disabled</choice>
-      <choice value="t">Enabled</choice>
-      <default>f</default>
-    </input>
   </fieldset>
   <row>
-    <html>
-      <h3>Note: When querying against mass amounts of data, enable summarized search</h3>
-    </html>
-  </row>
-  <row>
-    <html>
+    <panel>
+      <html>
       <h1>Total IOCs Being Queried:</h1>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -105,6 +97,7 @@
           <latest>now</latest>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
         <option name="underLabel">Count of All IOCs Detectable in Splunk, not how many positive hits.</option>
@@ -114,9 +107,11 @@
     </panel>
   </row>
   <row>
-    <html>
+    <panel>
+      <html>
       <h1>IOC Statistics</h1>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -128,6 +123,7 @@ $SrcLookup$
 | stats dc(src) as "Unique Source IP IOCs Found"</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,10]</option>
         <option name="refresh.display">progressbar</option>
@@ -143,6 +139,7 @@ $SrcLookup$
 | stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,15]</option>
         <option name="refresh.display">progressbar</option>
@@ -158,6 +155,7 @@ $DestLookup$
 | stats dc(dest) as "Unique Destination IP IOCs Found"</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,10]</option>
         <option name="refresh.display">progressbar</option>
@@ -173,6 +171,7 @@ $DestLookup$
 | stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,15]</option>
         <option name="refresh.display">progressbar</option>
@@ -190,6 +189,7 @@ $QueryLookup$
 | stats dc(query) as "Unique Query IOCs Found"</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,10]</option>
         <option name="refresh.display">progressbar</option>
@@ -205,6 +205,7 @@ $QueryLookup$
 | stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,15]</option>
         <option name="refresh.display">progressbar</option>
@@ -221,6 +222,7 @@ $AnswerLookup$
         </search>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,10]</option>
         <option name="refresh.display">progressbar</option>
@@ -237,6 +239,7 @@ $AnswerLookup$
 | stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,15]</option>
         <option name="refresh.display">progressbar</option>
@@ -254,6 +257,7 @@ $MD5Lookup$
 | stats dc(md5) as "Unique Query IOCs Found"</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,10]</option>
         <option name="refresh.display">progressbar</option>
@@ -269,6 +273,7 @@ $MD5Lookup$
 | stats count</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="rangeColors">["#10ad05","#cfc023","#de8818","#bd1717"]</option>
         <option name="rangeValues">[0,5,15]</option>
         <option name="refresh.display">progressbar</option>
@@ -276,10 +281,12 @@ $MD5Lookup$
       </single>
     </panel>
   </row>
-    <row>
-    <html>
+  <row>
+    <panel>
+      <html>
       <h1>IOC Breakdown</h1>
     </html>
+    </panel>
   </row>
   <row>
     <panel>
@@ -294,6 +301,7 @@ $ForEachFunction$
 $Formatting$</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
@@ -334,6 +342,7 @@ $Formatting$</query>
         </search>
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
@@ -377,6 +386,7 @@ $ForEachFunction$
 $Formatting$</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <format type="color" field="Malicious Confidence">
@@ -415,6 +425,7 @@ $ForEachFunction$
 $Formatting$</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <format type="color" field="Malicious Confidence">
@@ -455,6 +466,7 @@ $ForEachFunction$
 $Formatting$</query>
         </search>
         <option name="drilldown">none</option>
+        <option name="link.visible">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <format type="color" field="Malicious Confidence">
