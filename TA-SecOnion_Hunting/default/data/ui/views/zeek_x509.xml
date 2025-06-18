@@ -1,0 +1,112 @@
+<form version="1.1" theme="dark">
+  <label>Zeek x509 Overview (V1.0.1)</label>
+  <description>V1: Dashboard created</description>
+  <search id="BaseSearch_x509">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
+| rename x509.certificate_subject AS certificate_subject, x509.certificate_issuer AS certificate_issuer
+| rex field=certificate_subject "(?&lt;=CN=)(?P&lt;Subject_CN1&gt;[^,]+)(?:,CN=(?P&lt;Subject_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Subject_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU3&gt;[^,]+))?(?:,O=(?P&lt;Subject_O&gt;[^,]+))?(?:,L=(?P&lt;Subject_L&gt;[^,]+))?(?:,ST=(?P&lt;Subject_ST&gt;[^,]+))?(?:,C=(?P&lt;Subject_C&gt;[^,]+))?"
+| rex field=certificate_issuer "(?&lt;=CN=)(?P&lt;Issuer_CN1&gt;[^,]+)(?:,CN=(?P&lt;Issuer_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Issuer_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU3&gt;[^,]+))?(?:,O=(?P&lt;Issuer_O&gt;[^,]+))?(?:,L=(?P&lt;Issuer_L&gt;[^,]+))?(?:,ST=(?P&lt;Issuer_ST&gt;[^,]+))?(?:,C=(?P&lt;Issuer_C&gt;[^,]+))?"
+| where Subject_CN1=Issuer_CN1
+| fillnull value="-" Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subejct_ST, Issuer_C, Subejct_C
+| table _time, certificate_issuer, certificate_subject, Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subejct_ST, Issuer_C, Subejct_C</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+    <progress>
+      <unset token="Loading"></unset>
+      <!--Set Your Zeek Indexes -->
+      <set token="zeek">zeek*</set>
+      <set token="zeeksourcetype">zeek:*:json</set>
+    </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
+  </search>
+  <search id="BaseSearch_Notice">
+    <query>
+      | tstats summariesonly=f count from datamodel=Zeek_Suite.Notice by _time, Notice.sub, Notice.msg, Notice.dst, Notice.p, Notice.uid
+      | rename Notice.sub AS sub, Notice.msg AS msg, Notice.dst AS dst, Notice.p AS p, Notice.uid AS uid
+      | eval Time=_time
+      | table sub, msg, dst, p, uid, _time, Time
+    </query>
+    <progress>
+      <unset token="Loading2"></unset>
+    </progress>
+    <done>
+      <set token="Loading2">1</set>
+    </done>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>X509.LOG RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
+  <row rejects="$Loading2$">
+    <panel>
+      <html>
+      <h1>NOTICE.LOG RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total x509 Logs</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
+          | stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.visible">0</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Self Signed Certificate Overview</title>
+        <search base="BaseSearch_x509">
+          <query>```Smile```</query>
+          <progress>
+            <unset token="subject"></unset>
+          </progress>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <drilldown>
+          <set token="subject">$row.certificate_subject$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$subject$">
+    <panel>
+      <table>
+        <title>Certificate To IP Correlation Via Notice.log</title>
+        <search base="BaseSearch_Notice">
+          <query>| where like (sub, $subject|s$)
+          | rename sub AS "Certificate Subject", msg AS "Message", dst AS "Destination IP", p AS "Destination Port"</query>
+        </search>
+        <drilldown>
+          <set token="subuid">$row.uid$</set>
+          <set token="basetime">$row.Time$</set>
+          <eval token="TimeEarliest">relative_time($basetime$, "-2d")</eval>
+          <eval token="TimeLatest">relative_time($basetime$, "+2d")</eval>
+          <link target="_blank">search?q=index%3D$zeek|s$%20sourcetype%3D$zeeksourcetype|s$%20uid%3D$subuid|s$%0Aearliest%3D$TimeEarliest|s$%20latest%3D$TimeLatest|s$%0A%7C%20sort%20_time&amp;earliest=$TimeEarliest$&amp;latest=$TimeLatest$</link>
+        </drilldown>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
