@@ -1,42 +1,38 @@
 <form version="1.1" theme="dark">
-  <label>Zeek SSH Overview (V2.0.3)</label>
-  <description>V2 Additions: Dashboard Now Rides The Zeek_Suite Datamodel</description>
-  <search id="BaseSearch">
-    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SSH by SSH.client, SSH.src_ip, SSH.dest_ip, SSH.dest_port, SSH.server, _time
-| rename SSH.client AS client, SSH.src_ip AS id.orig_h, SSH.dest_ip AS id.resp_h, SSH.dest_port AS port, SSH.server AS server</query>
+  <label>Zeek x509 Overview (V1.0.1)</label>
+  <description>V1: Dashboard created</description>
+  <search id="BaseSearch_x509">
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
+| rename x509.certificate_subject AS certificate_subject, x509.certificate_issuer AS certificate_issuer
+| rex field=certificate_subject "(?&lt;=CN=)(?P&lt;Subject_CN1&gt;[^,]+)(?:,CN=(?P&lt;Subject_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Subject_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU3&gt;[^,]+))?(?:,O=(?P&lt;Subject_O&gt;[^,]+))?(?:,L=(?P&lt;Subject_L&gt;[^,]+))?(?:,ST=(?P&lt;Subject_ST&gt;[^,]+))?(?:,C=(?P&lt;Subject_C&gt;[^,]+))?"
+| rex field=certificate_issuer "(?&lt;=CN=)(?P&lt;Issuer_CN1&gt;[^,]+)(?:,CN=(?P&lt;Issuer_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Issuer_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU3&gt;[^,]+))?(?:,O=(?P&lt;Issuer_O&gt;[^,]+))?(?:,L=(?P&lt;Issuer_L&gt;[^,]+))?(?:,ST=(?P&lt;Issuer_ST&gt;[^,]+))?(?:,C=(?P&lt;Issuer_C&gt;[^,]+))?"
+| where Subject_CN1=Issuer_CN1
+| fillnull value="-" Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subejct_ST, Issuer_C, Subejct_C
+| table _time, certificate_issuer, certificate_subject, Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subejct_ST, Issuer_C, Subejct_C</query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
     <progress>
       <unset token="Loading"></unset>
-      <set token="Format">| stats count by client, id.orig_h, id.resp_h, port, server
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "client"="No Instances Found"]
-| rename id.orig_h AS Source, id.resp_h AS Destination, port AS Port, server AS Server, client AS Client</set>
-      <set token="CIDRFormat">| stats count by orig_subnet, resp_subnet
-| sort -count
-| appendpipe [| stats count | where count=0 | eval "orig_subnet"="No Instances Found"]
-| rename orig_subnet AS "Source Subnet", resp_subnet AS "Destination Subnet"</set>
-      <set token="IPEval">| eval ExternalSouce = case(
-cidrmatch("10.0.0.0/8",id.orig_h),"False",
-cidrmatch("172.16.0.0/12",id.orig_h),"False",
-cidrmatch("192.168.0.0/16",id.orig_h),"False",
-isnull(id.orig_h) OR like(id.orig_h,""), "False",
-match(id.orig_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")
-
-| eval ExternalDest = case(
-cidrmatch("10.0.0.0/8",id.resp_h),"False",
-cidrmatch("172.16.0.0/12",id.resp_h),"False",
-cidrmatch("192.168.0.0/16",id.resp_h),"False",
-isnull(id.resp_h) OR like(id.resp_h,""), "False",
-match(id.resp_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
-      <set token="CIDR16">| rex field=id.orig_h "(?&lt;orig_subnet&gt;\d+\.\d+)\.\d+\.\d+"
-| eval orig_subnet=orig_subnet + ".0.0/16"
-| rex field=id.resp_h "(?&lt;resp_subnet&gt;\d+\.\d+)\.\d+\.\d+"
-| eval resp_subnet=resp_subnet + ".0.0/16"
-| where !like (client, "-")</set>
+      <!--Set Your Zeek Indexes -->
+      <set token="zeek">zeek*</set>
+      <set token="zeeksourcetype">zeek:*:json</set>
     </progress>
     <done>
       <set token="Loading">1</set>
+    </done>
+  </search>
+  <search id="BaseSearch_Notice">
+    <query>
+      | tstats summariesonly=f count from datamodel=Zeek_Suite.Notice by _time, Notice.sub, Notice.msg, Notice.dst, Notice.p, Notice.uid
+      | rename Notice.sub AS sub, Notice.msg AS msg, Notice.dst AS dst, Notice.p AS p, Notice.uid AS uid
+      | eval Time=_time
+      | table sub, msg, dst, p, uid, _time, Time
+    </query>
+    <progress>
+      <unset token="Loading2"></unset>
+    </progress>
+    <done>
+      <set token="Loading2">1</set>
     </done>
   </search>
   <fieldset submitButton="true" autoRun="true">
@@ -51,148 +47,66 @@ match(id.resp_h,"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"),"True")</set>
   <row rejects="$Loading$">
     <panel>
       <html>
-      <h1>RESULTS LOADING...</h1>
+      <h1>X509.LOG RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
+  <row rejects="$Loading2$">
+    <panel>
+      <html>
+      <h1>NOTICE.LOG RESULTS LOADING...</h1>
     </html>
     </panel>
   </row>
   <row>
     <panel>
       <single>
-        <title>Total SSH Logs</title>
-        <search base="BaseSearch">
-          <query>| stats count</query>
+        <title>Total x509 Logs</title>
+        <search>
+          <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
+          | stats count</query>
         </search>
-        <option name="link.visible">false</option>
         <option name="drilldown">none</option>
-        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="underLabel">Excluding Known Scanners</option>
+        <option name="link.visible">0</option>
       </single>
     </panel>
   </row>
   <row>
     <panel>
-      <chart>
-        <title>Top Destination Ports</title>
-        <search base="BaseSearch">
-          <query>| stats count by port</query>
-        </search>
-        <option name="link.visible">false</option>
-        <option name="charting.chart">pie</option>
-        <option name="charting.drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <table>
-        <search base="BaseSearch">
-          <query>$IPEval$
-| where like (ExternalSouce, "True") AND !like (ExternalDest, "True")
-$Format$</query>
+        <title>Self Signed Certificate Overview</title>
+        <search base="BaseSearch_x509">
+          <query>| appendpipe [| stats count | where count=0 | eval "Issuer_CN1"="No Instances Found"]</query>
+          <progress>
+            <unset token="subject"></unset>
+          </progress>
         </search>
-        <option name="link.visible">false</option>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="color" field="count">
-          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
-          <scale type="minMidMax"></scale>
-        </format>
-        <format type="color" field="Client">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
-        </format>
-        <format type="color" field="Server">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
-        </format>
-      </table>
-    </panel>
-    <panel>
-      <table>
-        <search base="BaseSearch">
-          <query>$IPEval$
-| where !like (ExternalSouce, "True") AND like (ExternalDest, "True")
-$Format$</query>
-        </search>
-        <option name="link.visible">false</option>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="color" field="Client">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
-        </format>
-        <format type="color" field="Server">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
-        </format>
-        <format type="color" field="count">
-          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
-          <scale type="minMidMax"></scale>
-        </format>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <drilldown>
+          <set token="subject">$row.certificate_subject$</set>
+        </drilldown>
       </table>
     </panel>
   </row>
-  <row>
+  <row depends="$subject$">
     <panel>
       <table>
-        <title>Weird SSH Ports</title>
-        <search base="BaseSearch">
-          <query>| where !like (port, "22")
-$Format$</query>
+        <title>Certificate To IP Correlation Via Notice.log</title>
+        <search base="BaseSearch_Notice">
+          <query>| where like (sub, $subject|s$)
+          | appendpipe [| stats count | where count=0 | eval "sub"="No Instances Found"]
+          | rename sub AS "Certificate Subject", msg AS "Message", dst AS "Destination IP", p AS "Destination Port"</query>
         </search>
-        <option name="link.visible">false</option>
-        <option name="drilldown">none</option>
+        <drilldown>
+          <set token="subuid">$row.uid$</set>
+          <set token="basetime">$row.Time$</set>
+          <eval token="TimeEarliest">relative_time($basetime$, "-2d")</eval>
+          <eval token="TimeLatest">relative_time($basetime$, "+2d")</eval>
+          <link target="_blank">search?q=index%3D$zeek|s$%20sourcetype%3D$zeeksourcetype|s$%20uid%3D$subuid|s$%0Aearliest%3D$TimeEarliest|s$%20latest%3D$TimeLatest|s$%0A%7C%20sort%20_time&amp;earliest=$TimeEarliest$&amp;latest=$TimeLatest$</link>
+        </drilldown>
         <option name="refresh.display">progressbar</option>
-        <format type="color" field="count">
-          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
-          <scale type="minMidMax"></scale>
-        </format>
-        <format type="color" field="Client">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
-        </format>
-        <format type="color" field="Server">
-          <colorPalette type="sharedList"></colorPalette>
-          <scale type="sharedCategory"></scale>
-        </format>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <table>
-        <title>Weird SSH Clients</title>
-        <search base="BaseSearch">
-          <query>| where !like (client, "-") AND !like (client, "%SSH%")
-$Format$</query>
-        </search>
-        <option name="link.visible">false</option>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="color" field="count">
-          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
-          <scale type="minMidMax"></scale>
-        </format>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <table>
-        <title>CIDR16 Traffic Breakdown</title>
-        <search base="BaseSearch">
-          <query>$CIDR16$
-$CIDRFormat$</query>
-        </search>
-        <option name="link.visible">false</option>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="color" field="count">
-          <colorPalette type="minMidMax" maxColor="#D41F1F" minColor="#FFFFFF"></colorPalette>
-          <scale type="minMidMax"></scale>
-        </format>
       </table>
     </panel>
   </row>
