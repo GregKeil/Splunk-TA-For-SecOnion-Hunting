@@ -36,6 +36,9 @@
 		<collection label="SSH">
           		<view name="zeek_ssh_overview" />
     		</collection>
+		<collection label="x509">
+          		<view name="zeek_x509_overview" />
+    		</collection>
 	</collection>
 <collection label="IOC Hunting">
 	  <view name="zeek_ioc_dashboard">
