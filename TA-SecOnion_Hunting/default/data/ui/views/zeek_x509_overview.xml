@@ -2,7 +2,7 @@
   <label>Zeek x509 Overview (V1.0.1)</label>
   <description>V1: Dashboard created</description>
   <search id="BaseSearch_x509">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
 | rename x509.certificate_subject AS certificate_subject, x509.certificate_issuer AS certificate_issuer
 | rex field=certificate_subject "(?&lt;=CN=)(?P&lt;Subject_CN1&gt;[^,]+)(?:,CN=(?P&lt;Subject_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Subject_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU3&gt;[^,]+))?(?:,O=(?P&lt;Subject_O&gt;[^,]+))?(?:,L=(?P&lt;Subject_L&gt;[^,]+))?(?:,ST=(?P&lt;Subject_ST&gt;[^,]+))?(?:,C=(?P&lt;Subject_C&gt;[^,]+))?"
 | rex field=certificate_issuer "(?&lt;=CN=)(?P&lt;Issuer_CN1&gt;[^,]+)(?:,CN=(?P&lt;Issuer_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Issuer_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU3&gt;[^,]+))?(?:,O=(?P&lt;Issuer_O&gt;[^,]+))?(?:,L=(?P&lt;Issuer_L&gt;[^,]+))?(?:,ST=(?P&lt;Issuer_ST&gt;[^,]+))?(?:,C=(?P&lt;Issuer_C&gt;[^,]+))?"
