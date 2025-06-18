@@ -2,7 +2,7 @@
   <label>Zeek SSL Overview (V1.0.0)</label>
   <description>V1 Additions: Dashboard Created</description>
   <search id="BaseSearch">
-    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.SSL by SSL.cipher, SSL.curve, SSL.dest_ip, SSL.dest_port, SSL.src_ip, SSL.src_port, SSL.ja3, SSL.ja3s, SSL.last_alert, SSL.server_name, _time
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.SSL by SSL.cipher, SSL.curve, SSL.dest_ip, SSL.dest_port, SSL.src_ip, SSL.src_port, SSL.ja3, SSL.ja3s, SSL.last_alert, SSL.server_name, _time
 | rename SSL.cipher AS cipher, SSL.curve AS curve, SSL.dest_ip AS dest_ip, SSL.dest_port AS dest_port, SSL.src_ip AS src_ip, SSL.src_port AS src_port, SSL.ja3 AS ja3, SSL.ja3s AS ja3s, SSL.last_alert AS last_alert, SSL.server_name AS server_name</query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
