@@ -21,6 +21,9 @@
 		<collection label="NTLM">
           		<view name="zeek_ntlm_overview" />
     		</collection>
+		<collection label="RDP">
+          		<view name="zeek_rdp_overview" />
+    		</collection>
 		<collection label="SIP">
           		<view name="zeek_sip_overview" />
     		</collection>
