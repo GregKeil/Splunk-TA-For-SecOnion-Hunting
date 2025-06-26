@@ -1,0 +1,204 @@
+<form version="1.1" theme="dark">
+  <label>Zeek RDP Overview (V1.0.1)</label>
+  <description>V1: Dashboard created</description>
+  <search id="BaseSearch">
+    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.RDP by _time, RDP.cookie, RDP.result, RDP.id_orig_h, RDP.id_orig_p, RDP.id_resp_h, RDP.id_resp_p, RDP.uid
+    | rename RDP.cookie AS cookie, RDP.result AS result, RDP.id_orig_h AS id_orig_h, RDP.id_orig_p AS id_orig_p, RDP.id_resp_h AS id_resp_h, RDP.id_resp_p AS id_resp_p, RDP.uid AS uid</query>
+    <progress>
+      <unset token="Loading">1</unset>
+      <unset token="irregular_port"></unset>
+      <unset token="result_selection"></unset>
+      <unset token="cookie_selection"></unset>
+      <unset token="ip_selection"></unset>
+      <!--Set Your Zeek Indexes -->
+      <set token="zeek">zeek*</set>
+      <set token="zeeksourcetype">zeek:*:json</set>
+    </progress>
+    <done>
+      <set token="Loading">1</set>
+    </done>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <fieldset submitButton="true" autoRun="true">
+    <input type="time" token="time">
+      <label>Time Selection</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row rejects="$Loading$">
+    <panel>
+      <html>
+      <h1>RESULTS LOADING...</h1>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total RDP Logs</title>
+        <search base="BaseSearch">
+          <query>| stats count</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="link.visible">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="underLabel">Excluding Known Scanners</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+    <h1/>
+  </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>| stats count by result
+| rename result AS Result
+| appendpipe [| stats count | where count=0 | eval "result"="No Instances Found"]</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="result_selection">$row.Result$</set>
+          <unset token="irregular_port"></unset>
+          <unset token="cookie_selection"></unset>
+          <unset token="ip_selection"></unset>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>| where id_resp_p!="3389"| stats count by id_resp_p
+| rename id_resp_p AS "Destination Port"
+| appendpipe [| stats count | where count=0 | eval "Destination Port"="No Instances Found"]</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <unset token="result_selection"></unset>
+          <unset token="cookie_selection"></unset>
+          <unset token="ip_selection"></unset>
+          <set token="irregular_port">$row.Destination Port$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+    <h1/>
+  </html>
+    </panel>
+  </row>
+  <row depends="$result_selection$">
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>where result=$result_selection|s$
+| stats count by result, cookie
+| rename result AS Result, cookie AS Cookie
+| appendpipe [| stats count | where count=0 | eval "Result"="No Instances Found"]</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <unset token="irregular_port"></unset>
+          <set token="cookie_selection">$row.Cookie$</set>
+          <unset token="ip_selection"></unset>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$cookie_selection$">
+    <panel>
+      <html>
+    <h1/>
+  </html>
+    </panel>
+  </row>
+  <row depends="$cookie_selection$">
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>where cookie=$cookie_selection|s$
+| eval Time=_time
+| stats count by _time, result, cookie, id_orig_h, id_orig_p, id_resp_h, id_resp_p, uid, Time
+| rename result AS Result, cookie AS Cookie, id_orig_h AS "Source Host", id_orig_p AS "Source Port", id_resp_h AS "Destination Host", id_resp_p AS "Destination Port"
+| appendpipe [| stats count | where count=0 | eval "Result"="No Instances Found"]</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="subuid">$row.uid$</set>
+          <set token="basetime">$row.Time$</set>
+          <eval token="TimeEarliest">relative_time($basetime$, "-2d")</eval>
+          <eval token="TimeLatest">relative_time($basetime$, "+2d")</eval>
+          <link target="_blank">search?q=index%3D$zeek|s$%20sourcetype%3D$zeeksourcetype|s$%20uid%3D$subuid|s$%0Aearliest%3D$TimeEarliest|s$%20latest%3D$TimeLatest|s$%0A%7C%20sort%20_time&amp;earliest=$TimeEarliest$&amp;latest=$TimeLatest$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$irregular_port$">
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>where id_resp_p=$irregular_port|s$
+| stats count by id_orig_h, id_resp_p
+| rename id_orig_h AS "Source Host", id_resp_p AS "Destination Port"
+| appendpipe [| stats count | where count=0 | eval "Source Host"="No Instances Found"]</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <unset token="result_selection"></unset>
+          <unset token="cookie_selection"></unset>
+          <set token="ip_selection">$row.Source Host$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$ip_selection$">
+    <panel>
+      <html>
+    <h1/>
+  </html>
+    </panel>
+  </row>
+  <row depends="$ip_selection$">
+    <panel>
+      <table>
+        <search base="BaseSearch">
+          <query>where id_orig_h=$ip_selection|s$
+| eval Time=_time
+| stats count by _time, result, cookie, id_orig_h, id_orig_p, id_resp_h, id_resp_p, uid, Time
+| rename result AS Result, cookie AS Cookie, id_orig_h AS "Source Host", id_orig_p AS "Source Port", id_resp_h AS "Destination Host", id_resp_p AS "Destination Port"
+| appendpipe [| stats count | where count=0 | eval "Result"="No Instances Found"]</query>
+        </search>|<option name="drilldown">cell</option>
+        <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="subuid">$row.uid$</set>
+          <set token="basetime">$row.Time$</set>
+          <eval token="TimeEarliest">relative_time($basetime$, "-2d")</eval>
+          <eval token="TimeLatest">relative_time($basetime$, "+2d")</eval>
+          <link target="_blank">search?q=index%3D$zeek|s$%20sourcetype%3D$zeeksourcetype|s$%20uid%3D$subuid|s$%0Aearliest%3D$TimeEarliest|s$%20latest%3D$TimeLatest|s$%0A%7C%20sort%20_time&amp;earliest=$TimeEarliest$&amp;latest=$TimeLatest$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>
