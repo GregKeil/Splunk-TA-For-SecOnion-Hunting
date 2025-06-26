@@ -2,13 +2,14 @@
   <label>Zeek x509 Overview (V1.0.1)</label>
   <description>V1: Dashboard created</description>
   <search id="BaseSearch_x509">
-    <query>| tstats summariesonly=t count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
+    <query>| tstats summariesonly=f count from datamodel=Zeek_Suite.x509 by _time, x509.certificate_subject, x509.certificate_issuer
 | rename x509.certificate_subject AS certificate_subject, x509.certificate_issuer AS certificate_issuer
 | rex field=certificate_subject "(?&lt;=CN=)(?P&lt;Subject_CN1&gt;[^,]+)(?:,CN=(?P&lt;Subject_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Subject_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Subject_OU3&gt;[^,]+))?(?:,O=(?P&lt;Subject_O&gt;[^,]+))?(?:,L=(?P&lt;Subject_L&gt;[^,]+))?(?:,ST=(?P&lt;Subject_ST&gt;[^,]+))?(?:,C=(?P&lt;Subject_C&gt;[^,]+))?"
 | rex field=certificate_issuer "(?&lt;=CN=)(?P&lt;Issuer_CN1&gt;[^,]+)(?:,CN=(?P&lt;Issuer_CN2&gt;[^,]+))?(?:,CN=(?P&lt;Issuer_CN3&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU1&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU2&gt;[^,]+))?(?:,OU=(?P&lt;Issuer_OU3&gt;[^,]+))?(?:,O=(?P&lt;Issuer_O&gt;[^,]+))?(?:,L=(?P&lt;Issuer_L&gt;[^,]+))?(?:,ST=(?P&lt;Issuer_ST&gt;[^,]+))?(?:,C=(?P&lt;Issuer_C&gt;[^,]+))?"
+```Add Filters Here```
 | where Subject_CN1=Issuer_CN1
-| fillnull value="-" Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subejct_ST, Issuer_C, Subejct_C
-| table _time, certificate_issuer, certificate_subject, Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subejct_ST, Issuer_C, Subejct_C</query>
+| fillnull value="-" Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subject_ST, Issuer_C, Subject_C
+| table _time, certificate_issuer, certificate_subject, Issuer_CN1, Subject_CN1, Issuer_CN2, Subject_CN2, Issuer_OU1, Subject_OU1, Issuer_OU2, Subject_OU2, Issuer_OU3, Subject_OU3, Issuer_P, Subject_P, Issuer_L, Subject_L, Issuer_ST, Subject_ST, Issuer_C, Subject_C</query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
     <progress>
@@ -73,22 +74,34 @@
     </panel>
   </row>
   <row>
+    <html>
+      <h1></h1>
+    </html>
+  </row>
+  <row>
     <panel>
       <table>
         <title>Self Signed Certificate Overview</title>
         <search base="BaseSearch_x509">
-          <query>```Smile```</query>
           <progress>
             <unset token="subject"></unset>
           </progress>
+          <query>| rename certificate_issuer AS "Certificate Issuer", certificate_subject AS "Certificate Subject", Issuer_CN1 AS "Issuer CN1", Subject_CN1 AS "Subject CN1", Issuer_CN2 AS "Issuer CN2", Subject_CN2 AS "Subject CN2", Issuer_OU1 AS "Issuer OU1", Issuer_OU2 AS "Issuer OU2", Issuer_OU3 AS "Issuer OU3", Subject_OU1 AS "Subject OU1", Subject_OU2 AS "Subject OU2", Subject_OU3 AS "Subject OU3", Issuer_P AS "Issuer P", Issuer_L AS "Issuer L", Issuer_ST AS "Issuer ST", Issuer_C AS "Issuer C", Subject_P AS "Subject P", Subject_L AS "Subject L", Subject_ST AS "Subject ST", Subject_C AS "Subject C" 
+| appendpipe [| stats count | where count=0 | eval "Certificate Issuer"="No Instances Found"]</query>
         </search>
         <option name="drilldown">cell</option>
         <option name="link.visible">0</option>
+        <option name="refresh.display">progressbar</option>
         <drilldown>
-          <set token="subject">$row.certificate_subject$</set>
+          <set token="subject">$row.Certificate Issuer$</set>
         </drilldown>
       </table>
     </panel>
+  </row>
+  <row depends="$subject$">
+    <html>
+      <h1>Current Query: $subject$</h1>
+    </html>
   </row>
   <row depends="$subject$">
     <panel>
@@ -96,8 +109,11 @@
         <title>Certificate To IP Correlation Via Notice.log</title>
         <search base="BaseSearch_Notice">
           <query>| where like (sub, $subject|s$)
-          | rename sub AS "Certificate Subject", msg AS "Message", dst AS "Destination IP", p AS "Destination Port"</query>
+| rename sub AS "Certificate Subject", msg AS "Message", dst AS "Destination IP", p AS "Destination Port"
+| appendpipe [| stats count | where count=0 | eval "Certificate Subject"="No Instances Found"]</query>
         </search>
+        <option name="refresh.display">progressbar</option>
+		<option name="link.visible">0</option>
         <drilldown>
           <set token="subuid">$row.uid$</set>
           <set token="basetime">$row.Time$</set>
@@ -105,7 +121,6 @@
           <eval token="TimeLatest">relative_time($basetime$, "+2d")</eval>
           <link target="_blank">search?q=index%3D$zeek|s$%20sourcetype%3D$zeeksourcetype|s$%20uid%3D$subuid|s$%0Aearliest%3D$TimeEarliest|s$%20latest%3D$TimeLatest|s$%0A%7C%20sort%20_time&amp;earliest=$TimeEarliest$&amp;latest=$TimeLatest$</link>
         </drilldown>
-        <option name="refresh.display">progressbar</option>
       </table>
     </panel>
   </row>
