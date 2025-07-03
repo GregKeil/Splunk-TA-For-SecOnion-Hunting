@@ -53,7 +53,7 @@
     		</collection>
 	</collection>
 <collection label="IOC Hunting">
-	  <view name="zeek_ioc_dashboard">
+	  <view name="zeek_ioc_dashboard"/>
 </collection>
   <collection label="Visibility And Ingest">
     <collection label="Ingest Monitoring">
