@@ -1,1 +1,9 @@
-
+<dashboard version="1.1" theme="dark">
+  <label>Zeek HTTP Overview</label>
+  <description>This Protocol Has Not Yet Been Integrated Into The Suite</description>
+    <row>
+    <html>
+      <h1>Development In Progress</h1>
+    </html>
+  </row>
+</dashboard>
