@@ -12,11 +12,17 @@
           		<view name="zeek_dhcp_overview" />
           		<view name="zeek_dhcp_lookup" />
     		</collection>
+		<collection label="DNS">
+         		<view name="zeek_dns_overview" />
+    		</collection>
 		<collection label="DPD">
           		<view name="zeek_dpd_overview" />
     		</collection>
 		<collection label="Files">
           		<view name="zeek_files_overview" />
+    		</collection>
+		<collection label="HTTP">
+         		<view name="zeek_http_overview" />
     		</collection>
 		<collection label="NTLM">
           		<view name="zeek_ntlm_overview" />
@@ -29,6 +35,9 @@
     		</collection>
 		<collection label="SSL">
           		<view name="zeek_ssl_overview" />
+    		</collection>
+		<collection label="SMB">
+         		<view name="zeek_smb_overview" />
     		</collection>
 		<collection label="SMTP">
          		<view name="zeek_smtp_overview" />
