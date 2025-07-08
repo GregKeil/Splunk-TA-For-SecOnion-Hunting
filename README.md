@@ -26,6 +26,7 @@
     - _URL_iocs.csv_
    
 ## Upcoming Additions:
-- Zeek HTTP Overview
-- Zeek SMB Overview
-- Zeek DNS Overview
+### Dashboards
+  - Zeek HTTP Overview
+  - Zeek SMB Overview
+  - Zeek DNS Overview
