@@ -12,3 +12,6 @@
   - https://splunkbase.splunk.com/app/1724
 - **MA-SecOnion**
   - https://github.com/GregKeil/Inputs-For-Splunk-UF/tree/main/SecOnion
+
+## Other Notes:
+- When changes are made to the Known_Scanners.csv (Utilized To Filter Scanners Out), The Zeek_Suite & Suricata_Suite datamodels must be rebuilt
