@@ -1,5 +1,6 @@
 # Splunk TA For SecOnion Hunting
 
+
 ## Requirements & Recommendations:
 ### Requirements:
 - **TA For Zeek**
@@ -13,6 +14,7 @@
 - **MA-SecOnion**
   - https://github.com/GregKeil/Inputs-For-Splunk-UF/tree/main/SecOnion
 
+
 ## Other Notes:
 ### Usage Notes
 - **Known_Scanners.csv**
@@ -24,6 +26,7 @@
     - _IP_iocs.csv_
     - _MD5_iocs.csv_
     - _URL_iocs.csv_
+
    
 ## Upcoming Additions:
 ### Dashboards
