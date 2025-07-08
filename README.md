@@ -26,9 +26,9 @@
     - _IP_iocs.csv_
     - _MD5_iocs.csv_
     - _URL_iocs.csv_
-
    
-## Upcoming Additions:
+   
+## Upcoming Changes & Additions:
 ### Dashboards
 - Zeek HTTP Overview
 - Zeek SMB Overview
