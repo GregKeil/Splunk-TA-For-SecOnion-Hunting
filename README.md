@@ -16,7 +16,7 @@
 
 
 ## Other Notes:
-### Usage Notes
+### Usage Notes:
 - **Known_Scanners.csv**
   - When changes are made to the Known_Scanners.csv (Utilized To Filter Scanners Out), The Zeek_Suite & Suricata_Suite datamodels must be rebuilt
 - **IOC Integration**
@@ -29,7 +29,7 @@
    
    
 ## Upcoming Changes & Additions:
-### Dashboards
+### Dashboards:
 - Zeek HTTP Overview
 - Zeek SMB Overview
 - Zeek DNS Overview
