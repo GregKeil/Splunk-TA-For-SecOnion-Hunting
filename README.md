@@ -27,6 +27,9 @@
    
 ## Upcoming Additions:
 ### Dashboards
-  - Zeek HTTP Overview
-  - Zeek SMB Overview
-  - Zeek DNS Overview
+- Zeek HTTP Overview
+- Zeek SMB Overview
+- Zeek DNS Overview
+
+### Functionality:
+- Identifying Any Flaws In Current Version
