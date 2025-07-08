@@ -14,4 +14,18 @@
   - https://github.com/GregKeil/Inputs-For-Splunk-UF/tree/main/SecOnion
 
 ## Other Notes:
-- When changes are made to the Known_Scanners.csv (Utilized To Filter Scanners Out), The Zeek_Suite & Suricata_Suite datamodels must be rebuilt
+### Usage Notes
+- **Known_Scanners.csv**
+  - When changes are made to the Known_Scanners.csv (Utilized To Filter Scanners Out), The Zeek_Suite & Suricata_Suite datamodels must be rebuilt
+- **IOC Integration**
+  - Changes can be made freely without the need to modify anything else & will apply immediately
+  - Available IOC Lookup Files:
+    - _Domain_iocs.csv_
+    - _IP_iocs.csv_
+    - _MD5_iocs.csv_
+    - _URL_iocs.csv_
+   
+## Upcoming Additions:
+- Zeek HTTP Overview
+- Zeek SMB Overview
+- Zeek DNS Overview
